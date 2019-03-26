@@ -134,18 +134,18 @@
 <p><img src="pap.png" alt="pap"></p>
 <p>The network card of the initial <strong>Centos</strong> is turn off at first.</p>
 <p>Enter the operator system, and input the command below.</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span> ip addr</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> ip addr</span></span><br></pre></td></tr></table></figure>
 <p>It’s shown that the network card doesn’t work now, because the vm has no ip which means that it can’t connect to the network.</p>
 <p><img src="ip1.png" alt="ip1"></p>
 <p>And we can just text the config file of eth0 and put it on.</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span> vi /etc/sysconfig/network-scripts/ifcfg-eth0</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> vi /etc/sysconfig/network-scripts/ifcfg-eth0</span></span><br></pre></td></tr></table></figure>
 <p>After getting into the file, we can see that now the ‘ONBOOT’ feature is set OFF</p>
 <p><img src="onboot_no.png" alt="onboot_no"></p>
 <p>Reset the ONBOOT on by replacing the no with yes.</p>
 <p>Save and quit the file. And restart the network.</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span> sudo service network restart</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> sudo service network restart</span></span><br></pre></td></tr></table></figure>
 <p>Then, check the ip again.</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span> ip addr</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> ip addr</span></span><br></pre></td></tr></table></figure>
 <p>Now it’s apparently shown that the IP address is 10.211.55.10/24.</p>
 <p><img src="ip2.png" alt="ip2"></p>
 <p>After getting the ip address, Do the same thing in the other vm.</p>
@@ -155,9 +155,9 @@
 <p><img src="ping.png" alt="ping"></p>
 <h4 id="Openssh-server"><a href="#Openssh-server" class="headerlink" title="Openssh-server"></a>Openssh-server</h4><p>Finally, in order to operater the <strong>Centos</strong> in my host terminal and easily record the output of every command, I need to install <em>openssh-server</em> in the <strong>Centos</strong>. </p>
 <p>Usually, <em>OpenSSH</em> will be downloaded with the <strong>Centos</strong>, if not, just run the command below and install.</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span> yum install openssh-server</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> yum install openssh-server</span></span><br></pre></td></tr></table></figure>
 <p>Start the service.</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span> service sshd start</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> service sshd start</span></span><br></pre></td></tr></table></figure>
 <p>Now, the <em>openssh-server</em> has been estabilshed and it’s available to connect the <strong>Centos</strong> Vms in the host terminal.</p>
 <p>Test by running the command in Terminal and input the password.</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ ssh -l root 10.211.55.10</span><br></pre></td></tr></table></figure>
@@ -272,7 +272,7 @@
 
 <div class="bottom-bar">
   <div class="bottom-bar-left">
-    <a href="javascript:void(0);" data-enable="false">
+    <a href="/2019/03/26/Dockerfile指令总结/" data-enable="true">
       <i class="fa fa-arrow-left"></i>
     </a>
     <a href="/2019/03/08/软件系统分析与设计之一/" data-enable="true">
