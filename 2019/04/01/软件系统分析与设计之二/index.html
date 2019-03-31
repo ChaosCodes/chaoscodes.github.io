@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html>
+  
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="utf-8">
+  <meta name="author" content="Dong Yuanxin">
+  
+  
+  <title>软件系统分析与设计之二 | Chaos Codes</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="系统分析,">
+  
+
+  
+  <meta name="description" content="Chaos_Site">
+
+  
+
+  <script src="//cdn.jsdelivr.net/npm/leancloud-storage@3.11.1/dist/av-min.js" async></script>
+
+  
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML" async></script>
+  
+
+  
+    <script src="//unpkg.com/valine/dist/Valine.min.js" async></script>
+  
+
+  <script>
+  // theme-ad's config script
+  // it can be used in every script
+  
+  window.AD_CONFIG = {
+    leancloud: {"appid":"30aez2Xj5kLeavizPUYvJTxY-gzGzoHsz","appkey":"mF5hceF2SeM6mArzNCvH2KfD","comment":true,"count":false},
+    welcome: {"enable":true,"interval":30},
+    start_time: "2018-02-27",
+    passwords: ["efe07af7441da2b69c4a41e42e73be4db47f66010a56900788a458354a7373ec", ],
+    is_post: true,
+    lock: false,
+    author: "Dong Yuanxin",
+    share: {"twitter":true,"facebook":true,"weibo":true,"qq":true,"wechat":true},
+    mathjax: true,
+    page_type: ""
+  };
+</script>
+
+  <script src="/vendor/sha256.min.js"></script>
+<script src="/js/auth.js"></script>
+<script src="/js/index.js"></script>
+<script src="/vendor/qrcode.min.js"></script>
+
+  
+    <link rel="icon" href="/images/favicon.ico">
+    <link rel="apple-touch-icon" href="/images/touch-icon.png">
+  
+
+  <link href="//netdna.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+
+  <link rel="stylesheet" href="/css/index.css">
+<link rel="stylesheet" href="/styles/components/highlight/highlight.css">
+
+  
+
+  
+
+
+
+</head>
+  <body>
+    <header class="site-header">
+  <div class="site-header-brand">
+    
+      <span class="site-header-brand-title">
+        <a href="/">Chaos</a>
+      </span>
+    
+    
+      <span class="site-header-brand-motto"> | Something for blogs</span>
+    
+  </div>
+  <div class="site-header-right">
+    <nav class="site-header-navigation">
+      
+        <a href="/" target="_self">首页</a>
+      
+        <a href="/archives/" target="_self">归档</a>
+      
+    </nav>
+    <div class="site-header-btn">
+      
+        <a href="https://github.com/ChaosCodes/" target="_blank">
+          <i class="fa fa-github-alt"></i>
+        </a>
+      
+      <a href="javascript:void(0);" id="site-search">
+        <i class="fa fa-search"></i>
+      </a>
+    </div>
+  </div>
+</header>
+<div id="site-process"></div>
+    <main>
+      
+  <div class="passage">
+  <div class="passage-meta">
+    <span>
+      <i class="fa fa-calendar"></i>2019-04-01
+    </span>
+    
+    
+      <span>
+        | <i class="fa fa-unlock-alt"></i>UNLOCK
+      </span>
+    
+  </div>
+  <h1 class="passage-title">
+    软件系统分析与设计之二
+  </h1>
+  
+  <article class="passage-article">
+    <h3 id="简答题"><a href="#简答题" class="headerlink" title="简答题"></a>简答题</h3><h4 id="用简短的语言给出对分析、设计的理解。"><a href="#用简短的语言给出对分析、设计的理解。" class="headerlink" title="用简短的语言给出对分析、设计的理解。"></a>用简短的语言给出对分析、设计的理解。</h4><h5 id="分析"><a href="#分析" class="headerlink" title="分析"></a>分析</h5><p>首先，系统分析研究程序或业务的过程，以确定其目标和目的，并创建系统和过程来通过有效方式实现这些目标。而且它关注于去调查问题和需求，而不是提出一个解决方案。例如，当我们需要一个新的在线交易系统，我们应该去看这个系统将如何使用，有什么功能。</p>
+<h5 id="设计"><a href="#设计" class="headerlink" title="设计"></a>设计</h5><p>系统设计是定义体系结构、模块、接口和数据以满足指定需求的过程。系统设计可以看作是系统理论在产品开发中的应用。而且它强调一种概念型的满足用户需求的解决方案，而不是其实现，例如，数据库模式和软件对象的描述。</p>
+<h4 id="用一句话描述面向对象的分析与设计的优势。"><a href="#用一句话描述面向对象的分析与设计的优势。" class="headerlink" title="用一句话描述面向对象的分析与设计的优势。"></a>用一句话描述面向对象的分析与设计的优势。</h4><p>面向对象的分析与设计通过封装使整个系统更容易理解，而且因此更加容易维护和进行单元测试，这种方法提高了重用性，也从而缩减了整个开发时间，使开发变得更加有效。</p>
+<h4 id="简述-UML（统一建模语言）的作用。考试考哪些图？"><a href="#简述-UML（统一建模语言）的作用。考试考哪些图？" class="headerlink" title="简述 UML（统一建模语言）的作用。考试考哪些图？"></a>简述 UML（统一建模语言）的作用。考试考哪些图？</h4><p>UML(统一建模语言)是一种标准语言，用于指定、可视化、构造和记录软件系统的构件。UML通常用于建模软件系统，但它并不局限于此边界。它也被用来为非软件系统建模。例如，制造单元中的流程等。</p>
+<h4 id="考试考的图"><a href="#考试考的图" class="headerlink" title="考试考的图"></a>考试考的图</h4><ul>
+<li>用例图：用户角度：功能、执行者</li>
+<li>静态图：系统静态结构<ul>
+<li>类图：概念及关系</li>
+<li>对象图：某种状态或时间段内，系统中活跃的对象及其关系</li>
+<li>包图：描述系统的分解结构</li>
+</ul>
+</li>
+<li>行为图：系统的动态行为<ul>
+<li>交互图：描述对象间的消息传递<ul>
+<li>顺序图：强调对象间消息发送的时序</li>
+<li>合作图：强调对象间的动态写作关系</li>
+</ul>
+</li>
+<li>状态图：对象的动态行为。状态 - 事件 - 状态迁移 - 响应动作</li>
+<li>活动图：描述系统为完成某功能而执行的操作序列</li>
+</ul>
+</li>
+<li>实现图：描述系统的组成和分布状况<ul>
+<li>构件图：组成部件及其关系</li>
+<li>部署图：物理体系结构及与软件单元的对应关系</li>
+</ul>
+</li>
+</ul>
+<h4 id="从软件本质的角度，解释软件范围（需求）控制的可行性"><a href="#从软件本质的角度，解释软件范围（需求）控制的可行性" class="headerlink" title="从软件本质的角度，解释软件范围（需求）控制的可行性"></a>从软件本质的角度，解释软件范围（需求）控制的可行性</h4><p>计算机软件是于操作有关的程序、以及与之相关的文档集合。由于软件本身的复杂性、不可见性、一致性、可变性，软件范围多数情况下对于客户和开发者都是模糊的，这形成软件产品与其他产品不同的开发过程。</p>
+<p>因此，范围管理是软件项目管理的重中之重。在多数情况下，客户与开发者能就项目的 20% 内容给出严格的需求约定，80% 的内容都是相对模糊的。因此，围绕客户目标，发现并满足客户感兴趣的内容是最关键的。</p>
+<p>所以对于软件需求，当与客户进行了全面的讨论协商，细化了20%的具体内容和有效需求后就能够满足客户80%的需求，从而有效控制软件需求。</p>
+<h3 id="项目管理实践"><a href="#项目管理实践" class="headerlink" title="项目管理实践"></a>项目管理实践</h3><ul>
+<li><p>看板使用练习（提交看板执行结果贴图，建议使用 Git project）</p>
+<ul>
+<li>使用截图工具（png格式输出），展现你团队的任务 Kanban</li>
+<li>每个人的任务是明确的。必须一周后可以看到具体结果</li>
+<li>每个人的任务是1-2项</li>
+<li>至少包含一个团队活动任务</li>
+</ul>
+<p><img src="kanban.png" alt="kanban"></p>
+</li>
+<li><p>UML绘图工具练习（提交贴图，必须使用 UMLet）</p>
+<ul>
+<li><p>这里选择教材p9的图1-6来绘制</p>
+<p><img src="uml.png" alt="uml"></p>
+</li>
+</ul>
+</li>
+</ul>
+
+  </article>
+  
+    <aside class="passage-copyright">
+      <div>本文作者: 曾广韬</div>
+      
+        <div>
+          原文链接: 
+          <a href target="_blank">https://ChaosCodes.github.io/2019/04/01/软件系统分析与设计之二/</a>
+        </div>
+      
+      <div>
+        版权声明: 本博客所有文章除特别声明外, 均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议. 转载请注明出处!
+      </div>
+    </aside>
+  
+  <aside class="table-content" id="site-toc">
+  <div class="table-content-title">
+    <i class="fa fa-arrow-right fa-lg" id="site-toc-hide-btn"></i>
+    <span>目录</span>
+  </div>
+  <div class="table-content-main">
+    <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#简答题"><span class="toc-text">简答题</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#用简短的语言给出对分析、设计的理解。"><span class="toc-text">用简短的语言给出对分析、设计的理解。</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#分析"><span class="toc-text">分析</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#设计"><span class="toc-text">设计</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#用一句话描述面向对象的分析与设计的优势。"><span class="toc-text">用一句话描述面向对象的分析与设计的优势。</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#简述-UML（统一建模语言）的作用。考试考哪些图？"><span class="toc-text">简述 UML（统一建模语言）的作用。考试考哪些图？</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#考试考的图"><span class="toc-text">考试考的图</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#从软件本质的角度，解释软件范围（需求）控制的可行性"><span class="toc-text">从软件本质的角度，解释软件范围（需求）控制的可行性</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#项目管理实践"><span class="toc-text">项目管理实践</span></a></li></ol>
+  </div>
+</aside>
+  
+    <div class="passage-tags">
+     
+      <a href="/tags/系统分析/"><i class="fa fa-tags"></i>系统分析</a>
+    
+    </div>
+  
+</div>
+
+    </main>
+    
+      <div class="site-comment-contanier">
+  <p id="site-comment-info">
+    <i class="fa fa-spinner fa-spin"></i> 评论加载中
+  </p>
+  <div id="site-comment">
+  </div>
+</div>
+    
+    <div class="site-footer-wrapper">
+  <footer class="site-footer">
+    
+      <div class="site-footer-col">
+        <h5 class="site-footer-title">相关推荐学习网站</h5>
+        
+          <span class="site-footer-item">
+            <a href="https://www.coursera.org/" target="_blank">couresa</a>
+          </span>
+        
+      </div>
+    
+    <!-- <div class="site-footer-info">
+      <i class="fa fa-clock-o"></i> 本站已稳定运行<span id="site-time"></span>
+    </div> -->
+    
+    
+      <div class="site-footer-info">
+        <i class="fa fa-at"></i> Email: kids937@foxmail.co
+      </div>
+    
+    <div class="site-footer-info">
+      <i class="fa fa-copyright"></i> 
+      2019 <a href="https://github.com/dongyuanxin/theme-ad/" target="_blank">Theme-AD</a>.
+      Created by <a href="https:/godbmw.com/" target="_blank">GodBMW</a>.
+      All rights reserved.
+    </div>
+  </footer>
+</div>
+    <div id="site-layer" style="display:none;">
+  <div class="site-layer-content">
+    <div class="site-layer-header">
+      <span class="site-layer-header-title" id="site-layer-title"></span>
+      <i class="fa fa-close" id="site-layer-close"></i>
+    </div>
+    <div class="site-layer-body" id="site-layer-container">
+      <div class="site-layer-input" id="site-layer-search" style="display: none;">
+        <input type="text">
+        <i class="fa fa-search"></i>
+      </div>
+      <div class="site-layer-reward" id="site-layer-reward" style="display: none;">
+        
+          <div>
+            <img src="/images/wechat.png" alt="WeChat">
+            
+              <p>WeChat</p>
+            
+          </div>
+        
+          <div>
+            <img src="/images/alipay.png" alt="AliPay">
+            
+              <p>AliPay</p>
+            
+          </div>
+        
+      </div>
+      <div id="site-layer-welcome" style="display:none;"></div>
+    </div>
+  </div>
+</div>
+    
+
+<div class="bottom-bar">
+  <div class="bottom-bar-left">
+    <a href="javascript:void(0);" data-enable="false">
+      <i class="fa fa-arrow-left"></i>
+    </a>
+    <a href="/2019/03/26/Dockerfile指令总结/" data-enable="true">
+      <i class="fa fa-arrow-right"></i>
+    </a>
+  </div>
+  <div class="bottom-bar-right">
+    <a href="javascript:void(0);" data-enable="true" id="site-toc-show-btn">
+      <i class="fa fa-bars"></i>
+    </a>
+    
+      <a href="#site-comment" data-enable="true">
+        <i class="fa fa-commenting"></i>
+      </a>
+    
+    <a href="javascript:void(0);" id="site-toggle-share-btn">
+      <i class="fa fa-share-alt"></i>
+    </a>
+    <a href="javascript:void(0);" id="site-reward">
+      <i class="fa fa-thumbs-up"></i>
+    </a>
+    <a href="javascript:void(0);" id="back-top-btn">
+      <i class="fa fa-chevron-up"></i>
+    </a>
+  </div>
+</div>
+    <div id="share-btn">
+  
+    <a id="share-btn-twitter" href="javascript:void(0);" target="_blank">
+      <i class="fa fa-twitter"></i>
+    </a>
+  
+  
+    <a id="share-btn-facebook" href="javascript:void(0);" target="_blank">
+      <i class="fa fa-facebook"></i>
+    </a>
+  
+  
+    <a id="share-btn-weibo" href="javascript:void(0);" target="_blank">
+      <i class="fa fa-weibo"></i>
+    </a>
+  
+  
+    <a id="share-btn-qq" href="javascript:void(0);" target="_blank">
+      <i class="fa fa-qq"></i>
+    </a>
+  
+  
+    <a id="share-btn-wechat" href="javascript:void(0);" target="_blank">
+      <i class="fa fa-wechat"></i>
+    </a>
+  
+</div>
+  </body>
+</html>
