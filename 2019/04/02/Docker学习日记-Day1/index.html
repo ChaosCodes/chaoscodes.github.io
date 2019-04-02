@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html>
+  
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="utf-8">
+  <meta name="author" content="Zeng Guangtao">
+  
+  
+  <title>Docker学习日记-Day1 | Chaos Codes</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="Hexo, Theme-AD">
+  
+
+  
+  <meta name="description" content="Chaos_Site">
+
+  
+
+  <script src="//cdn.jsdelivr.net/npm/leancloud-storage@3.11.1/dist/av-min.js" async></script>
+
+  
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML" async></script>
+  
+
+  
+    <script src="//unpkg.com/valine/dist/Valine.min.js" async></script>
+  
+
+  <script>
+  // theme-ad's config script
+  // it can be used in every script
+  
+  window.AD_CONFIG = {
+    leancloud: {"appid":"30aez2Xj5kLeavizPUYvJTxY-gzGzoHsz","appkey":"mF5hceF2SeM6mArzNCvH2KfD","comment":true,"count":false},
+    welcome: {"enable":true,"interval":30},
+    start_time: "2018-02-27",
+    passwords: ["efe07af7441da2b69c4a41e42e73be4db47f66010a56900788a458354a7373ec", ],
+    is_post: true,
+    lock: false,
+    author: "Zeng Guangtao",
+    share: {"twitter":true,"facebook":true,"weibo":true,"qq":true,"wechat":true},
+    mathjax: true,
+    page_type: ""
+  };
+</script>
+
+  <script src="/vendor/sha256.min.js"></script>
+<script src="/js/auth.js"></script>
+<script src="/js/index.js"></script>
+<script src="/vendor/qrcode.min.js"></script>
+
+  
+    <link rel="icon" href="/images/favicon.ico">
+    <link rel="apple-touch-icon" href="/images/touch-icon.png">
+  
+
+  <link href="//netdna.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+
+  <link rel="stylesheet" href="/css/index.css">
+<link rel="stylesheet" href="/styles/components/highlight/highlight.css">
+
+  
+
+  
+
+
+
+</head>
+  <body>
+    <header class="site-header">
+  <div class="site-header-brand">
+    
+      <span class="site-header-brand-title">
+        <a href="/">Chaos</a>
+      </span>
+    
+    
+      <span class="site-header-brand-motto"> | Something for blogs</span>
+    
+  </div>
+  <div class="site-header-right">
+    <nav class="site-header-navigation">
+      
+        <a href="/" target="_self">首页</a>
+      
+        <a href="/archives/" target="_self">归档</a>
+      
+    </nav>
+    <div class="site-header-btn">
+      
+        <a href="https://github.com/ChaosCodes/" target="_blank">
+          <i class="fa fa-github-alt"></i>
+        </a>
+      
+      <a href="javascript:void(0);" id="site-search">
+        <i class="fa fa-search"></i>
+      </a>
+    </div>
+  </div>
+</header>
+<div id="site-process"></div>
+    <main>
+      
+  <div class="passage">
+  <div class="passage-meta">
+    <span>
+      <i class="fa fa-calendar"></i>2019-04-02
+    </span>
+    
+    
+      <span>
+        | <i class="fa fa-unlock-alt"></i>UNLOCK
+      </span>
+    
+  </div>
+  <h1 class="passage-title">
+    Docker学习日记-Day1
+  </h1>
+  
+  <article class="passage-article">
+    <blockquote>
+<p> 由于实训要求搭建一个树莓派集群，故需要学习docker及docker swarm。便开始了docker的学习，也随之记下相关的笔记。</p>
+</blockquote>
+<h3 id="概念"><a href="#概念" class="headerlink" title="概念"></a>概念</h3><p><strong>Docker</strong>是一个提供给开发者、系统管理员利用容器(<em>containers</em>)进行开发，部署以及运行程序的平台。其中容器化(<em>containerization</em>)是指在<strong>Linux</strong>上使用<em>container</em>去部署应用。</p>
+<h5 id="容器化的特性"><a href="#容器化的特性" class="headerlink" title="容器化的特性"></a>容器化的特性</h5><ul>
+<li>灵活(<em>Flexible</em>): 即使最复杂的应用都能进行容器化。</li>
+<li>轻量(<em>Lightweight</em>): 容器利用、共享主机内核</li>
+<li>可互换的(Interchangeable): 用户可以动态进行部署更新、升级</li>
+<li>便携(Portable): 用户可以在本地搭建，部署到云端，甚至在任何地方运行</li>
+<li>可伸展(Scalable): 用户可以添加并自动分发<em>container</em>副本</li>
+<li>可堆叠(Stackable): 用户能垂直地动态地堆叠服务</li>
+</ul>
+<h4 id="Images与containers"><a href="#Images与containers" class="headerlink" title="Images与containers"></a>Images与containers</h4><p>首先<em>Image</em>是一个可执行的包，它包括了需要运行一个应用程序的任何东西，其中有代码、运行时间、库、环境、变量以及配置文件。</p>
+<p>一个<em>container</em>是<em>image</em>的一个运行时间实例，也就是说当实际执行时，在内存中<em>image</em>会变成<em>container</em>。</p>
+<p>如果要查看现在有多少容器在后台运行，可以在Linux终端输入</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> docker ps</span></span><br></pre></td></tr></table></figure>
+<h4 id="容器与虚拟机对比"><a href="#容器与虚拟机对比" class="headerlink" title="容器与虚拟机对比"></a>容器与虚拟机对比</h4><p>容器在Linux上运行并且和其他容器共享同一个主机内核。容器的过程是离散性的，它只占有其程序运行所需的最小的内存，不会过多占用机器内存。这也体现了其轻量的特点。</p>
+<p>而虚拟机会运行整一个操作系统，包括各种程序不会使用的接口，它提供的环境和资源比绝大多数应用程序所需的要多，相比之下就显得很冗杂。</p>
+<h3 id="安装及测试"><a href="#安装及测试" class="headerlink" title="安装及测试"></a>安装及测试</h3><h4 id="在Centos安装"><a href="#在Centos安装" class="headerlink" title="在Centos安装"></a>在Centos安装</h4><p>因为centos自带yum，这里可以直接下载</p>
+<p>在下载的过程遇到了一些小麻烦，因为一开始下载的版本不对后面还重装了一遍，重装过程可以点<a href="https://blog.csdn.net/qq_21816375/article/details/79832593" target="_blank" rel="noopener">这里</a>。</p>
+<p>总而言之，可以通过下面的命令直接安装。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> sudo yum install docker-ce</span></span><br></pre></td></tr></table></figure>
+<p>接着启动docker</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> service docker start</span></span><br></pre></td></tr></table></figure>
+<p>也可以查看docker版本</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> docker version</span></span><br></pre></td></tr></table></figure>
+<h5 id="小报错以及解决方案"><a href="#小报错以及解决方案" class="headerlink" title="小报错以及解决方案"></a>小报错以及解决方案</h5><blockquote>
+<p>[root@localhost ~]# docker run hello-world</p>
+<p>docker: Cannot connect to the Docker daemon at unix:///var/run/docker.sock. Is the docker daemon running?.<br>See ‘docker run –help’.</p>
+</blockquote>
+<p>出现这个情况一般是因为docker服务没有启动，所以一般执行一下<code>service docker start</code>就可以恢复正常。</p>
+<h4 id="Docker使用"><a href="#Docker使用" class="headerlink" title="Docker使用"></a>Docker使用</h4><ol>
+<li>首先我们可以尝试去从<code>Docker Hub</code>的库里面把<em>helloworld</em>的<code>image</code>给拉到本地来，运行</li>
+</ol>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> docker run hello-world</span></span><br><span class="line">Unable to find image 'hello-world:latest' locally</span><br><span class="line">latest: Pulling from library/hello-world</span><br><span class="line">1b930d010525: Pull complete</span><br><span class="line">Digest: sha256:2557e3c07ed1e38f26e389462d03ed943586f744621577a99efb77324b0fe535</span><br><span class="line">Status: Downloaded newer image for hello-world:latest</span><br><span class="line"></span><br><span class="line">Hello from Docker!</span><br><span class="line">This message shows that your installation appears to be working correctly.</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+<ol start="2">
+<li><p>这时候我们就可以查看到我们刚下载的<em>image</em>镜像</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> docker image ls</span></span><br><span class="line">REPOSITORY          TAG                 IMAGE ID            CREATED             SIZE</span><br><span class="line">hello-world         latest              fce289e99eb9        2 months ago        1.84kB</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>而如果查看docker里面的容器，可以运行(如果不加上all只能看到正在运行的容器)</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> docker container ls --all</span></span><br><span class="line">CONTAINER ID        IMAGE               COMMAND             CREATED             STATUS                      PORTS               NAMES</span><br><span class="line">e8c17790a5f7        hello-world         "/hello"            31 minutes ago      Exited (0) 31 minutes ago                       keen_lalande</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<h3 id="Dockfile"><a href="#Dockfile" class="headerlink" title="Dockfile"></a>Dockfile</h3><p>因为当我们运行程序的时候，我们一般都会首先为软件搭建一个开发环境。但在<em>Docker</em>上，<em>Dockefile</em>是一种可携带性的运行环境、镜像，他没有安装的必要。</p>
+<p>Dockfile定义了容器里面的环境，它会虚拟化容器的网络接口和硬件驱动，这样我们可以app需要的环境、文件都写在里面，之后整个app就能像我们想象的一样运行起来。</p>
+<h4 id="需求文件"><a href="#需求文件" class="headerlink" title="需求文件"></a>需求文件</h4><p>这里我首先就简单的分析官网上的例子，如果需要查看dockerfile各种规范语法，具体看<a href="https://chaoscodes.github.io/2019/03/26/Dockerfile%E6%8C%87%E4%BB%A4%E6%80%BB%E7%BB%93/">这里</a>.</p>
+<p><code>Dockerfile</code></p>
+<figure class="highlight dockerfile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Use an official Python runtime as a parent image</span></span><br><span class="line"><span class="keyword">FROM</span> python:<span class="number">2.7</span>-slim</span><br><span class="line"></span><br><span class="line"><span class="comment"># Set the working directory to /app</span></span><br><span class="line"><span class="keyword">WORKDIR</span><span class="bash"> /app</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># Copy the current directory contents into the container at /app</span></span><br><span class="line"><span class="keyword">COPY</span><span class="bash"> . /app</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># Install any needed packages specified in requirements.txt</span></span><br><span class="line"><span class="keyword">RUN</span><span class="bash"> pip install --trusted-host pypi.python.org -r requirements.txt</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># Make port 80 available to the world outside this container</span></span><br><span class="line"><span class="keyword">EXPOSE</span> <span class="number">80</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># Define environment variable</span></span><br><span class="line"><span class="keyword">ENV</span> NAME World</span><br><span class="line"></span><br><span class="line"><span class="comment"># Run app.py when the container launches</span></span><br><span class="line"><span class="keyword">CMD</span><span class="bash"> [<span class="string">"python"</span>, <span class="string">"app.py"</span>]</span></span><br></pre></td></tr></table></figure>
+<p>这里还需要有另外两个文件<code>requirements.txt</code>和<code>app.py</code>与dockerfile放在同一目录下。</p>
+<p><code>requirements.txt</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Flask</span><br><span class="line">Redis</span><br></pre></td></tr></table></figure>
+<p><code>app.py</code></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> flask <span class="keyword">import</span> Flask</span><br><span class="line"><span class="keyword">from</span> redis <span class="keyword">import</span> Redis, RedisError</span><br><span class="line"><span class="keyword">import</span> os</span><br><span class="line"><span class="keyword">import</span> socket</span><br><span class="line"></span><br><span class="line"><span class="comment"># Connect to Redis</span></span><br><span class="line">redis = Redis(host=<span class="string">"redis"</span>, db=<span class="number">0</span>, socket_connect_timeout=<span class="number">2</span>, socket_timeout=<span class="number">2</span>)</span><br><span class="line"></span><br><span class="line">app = Flask(__name__)</span><br><span class="line"></span><br><span class="line"><span class="meta">@app.route("/")</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">hello</span><span class="params">()</span>:</span></span><br><span class="line">    <span class="keyword">try</span>:</span><br><span class="line">        visits = redis.incr(<span class="string">"counter"</span>)</span><br><span class="line">    <span class="keyword">except</span> RedisError:</span><br><span class="line">        visits = <span class="string">"&lt;i&gt;cannot connect to Redis, counter disabled&lt;/i&gt;"</span></span><br><span class="line"></span><br><span class="line">    html = <span class="string">"&lt;h3&gt;Hello &#123;name&#125;!&lt;/h3&gt;"</span> \</span><br><span class="line">           <span class="string">"&lt;b&gt;Hostname:&lt;/b&gt; &#123;hostname&#125;&lt;br/&gt;"</span> \</span><br><span class="line">           <span class="string">"&lt;b&gt;Visits:&lt;/b&gt; &#123;visits&#125;"</span></span><br><span class="line">    <span class="keyword">return</span> html.format(name=os.getenv(<span class="string">"NAME"</span>, <span class="string">"world"</span>), hostname=socket.gethostname(), visits=visits)</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">"__main__"</span>:</span><br><span class="line">    app.run(host=<span class="string">'0.0.0.0'</span>, port=<span class="number">80</span>)</span><br></pre></td></tr></table></figure>
+<h4 id="新建镜像"><a href="#新建镜像" class="headerlink" title="新建镜像"></a>新建镜像</h4><p>首先新建三个文件如上所示，然后运行</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker build --tag=friendlyhello .</span><br></pre></td></tr></table></figure>
+<p>其中<code>.</code>指定了build的路径，而<code>tag</code>指定了镜像的名字及标签，通常 name:tag 或者 name 格式；可以在一次构建中为一个镜像设置多个标签，这里还可以这样写<code>-t friendlyhello</code>。</p>
+<p>于是运行之后docker就会根据dockerfile的指令一步一步新建一个<code>image</code>，在下面我们可以看到每一步的步骤。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br></pre></td><td class="code"><pre><span class="line">Sending build context to Docker daemon  9.216kB</span><br><span class="line">Step 1/7 : FROM python:2.7-slim</span><br><span class="line">2.7-slim: Pulling from library/python</span><br><span class="line">27833a3ba0a5: Pull complete</span><br><span class="line">8b35abcb27de: Pull complete</span><br><span class="line">cd1fc6dee9fe: Pull complete</span><br><span class="line">2c6a92003566: Pull complete</span><br><span class="line">Digest: sha256:55c18f359c28061ddf70ee194439e9a5b2bdc205df3e7559b419dad10086fc89</span><br><span class="line">Status: Downloaded newer image for python:2.7-slim</span><br><span class="line"><span class="meta"> ---&gt;</span><span class="bash"> 48e3247f2a19</span></span><br><span class="line">Step 2/7 : WORKDIR /app</span><br><span class="line"><span class="meta"> ---&gt;</span><span class="bash"> Running <span class="keyword">in</span> b2fc58222a81</span></span><br><span class="line">Removing intermediate container b2fc58222a81</span><br><span class="line"><span class="meta"> ---&gt;</span><span class="bash"> b4dacec4bec5</span></span><br><span class="line">Step 3/7 : COPY . /app</span><br><span class="line"><span class="meta"> ---&gt;</span><span class="bash"> a37d72004a37</span></span><br><span class="line">Step 4/7 : RUN pip install --trusted-host pypi.python.org -r requirements.txt</span><br><span class="line"><span class="meta"> ---&gt;</span><span class="bash"> Running <span class="keyword">in</span> fc0a07eeb8d1</span></span><br><span class="line">DEPRECATION: Python 2.7 will reach the end of its life on January 1st, 2020. Please upgrade your Python as Python 2.7 won't be maintained after that date. A future version of pip will drop support for Python 2.7.</span><br><span class="line">Collecting Flask (from -r requirements.txt (line 1))</span><br><span class="line">  Downloading https://files.pythonhosted.org/packages/7f/e7/08578774ed4536d3242b14dacb4696386634607af824ea997202cd0edb4b/Flask-1.0.2-py2.py3-none-any.whl (91kB)</span><br><span class="line">Collecting Redis (from -r requirements.txt (line 2))</span><br><span class="line">  Downloading https://files.pythonhosted.org/packages/ac/a7/cff10cc5f1180834a3ed564d148fb4329c989cbb1f2e196fc9a10fa07072/redis-3.2.1-py2.py3-none-any.whl (65kB)</span><br><span class="line">Collecting itsdangerous&gt;=0.24 (from Flask-&gt;-r requirements.txt (line 1))</span><br><span class="line">  Downloading https://files.pythonhosted.org/packages/76/ae/44b03b253d6fade317f32c24d100b3b35c2239807046a4c953c7b89fa49e/itsdangerous-1.1.0-py2.py3-none-any.whl</span><br><span class="line">Collecting Jinja2&gt;=2.10 (from Flask-&gt;-r requirements.txt (line 1))</span><br><span class="line">  Downloading https://files.pythonhosted.org/packages/7f/ff/ae64bacdfc95f27a016a7bed8e8686763ba4d277a78ca76f32659220a731/Jinja2-2.10-py2.py3-none-any.whl (126kB)</span><br><span class="line">Collecting Werkzeug&gt;=0.14 (from Flask-&gt;-r requirements.txt (line 1))</span><br><span class="line">  Downloading https://files.pythonhosted.org/packages/24/4d/2fc4e872fbaaf44cc3fd5a9cd42fda7e57c031f08e28c9f35689e8b43198/Werkzeug-0.15.1-py2.py3-none-any.whl (328kB)</span><br><span class="line">Collecting click&gt;=5.1 (from Flask-&gt;-r requirements.txt (line 1))</span><br><span class="line">  Downloading https://files.pythonhosted.org/packages/fa/37/45185cb5abbc30d7257104c434fe0b07e5a195a6847506c074527aa599ec/Click-7.0-py2.py3-none-any.whl (81kB)</span><br><span class="line">Collecting MarkupSafe&gt;=0.23 (from Jinja2&gt;=2.10-&gt;Flask-&gt;-r requirements.txt (line 1))</span><br><span class="line">  Downloading https://files.pythonhosted.org/packages/fb/40/f3adb7cf24a8012813c5edb20329eb22d5d8e2a0ecf73d21d6b85865da11/MarkupSafe-1.1.1-cp27-cp27mu-manylinux1_x86_64.whl</span><br><span class="line">Installing collected packages: itsdangerous, MarkupSafe, Jinja2, Werkzeug, click, Flask, Redis</span><br><span class="line">Successfully installed Flask-1.0.2 Jinja2-2.10 MarkupSafe-1.1.1 Redis-3.2.1 Werkzeug-0.15.1 click-7.0 itsdangerous-1.1.0</span><br><span class="line">Removing intermediate container fc0a07eeb8d1</span><br><span class="line"><span class="meta"> ---&gt;</span><span class="bash"> 3dad0b0e4b68</span></span><br><span class="line">Step 5/7 : EXPOSE 80</span><br><span class="line"><span class="meta"> ---&gt;</span><span class="bash"> Running <span class="keyword">in</span> 473579a3f06d</span></span><br><span class="line">Removing intermediate container 473579a3f06d</span><br><span class="line"><span class="meta"> ---&gt;</span><span class="bash"> 6eee048df31d</span></span><br><span class="line">Step 6/7 : ENV NAME World</span><br><span class="line"><span class="meta"> ---&gt;</span><span class="bash"> Running <span class="keyword">in</span> 970f404be828</span></span><br><span class="line">Removing intermediate container 970f404be828</span><br><span class="line"><span class="meta"> ---&gt;</span><span class="bash"> bc91bb38ab83</span></span><br><span class="line">Step 7/7 : CMD ["python", "app.py"]</span><br><span class="line"><span class="meta"> ---&gt;</span><span class="bash"> Running <span class="keyword">in</span> b3eb8764a188</span></span><br><span class="line">Removing intermediate container b3eb8764a188</span><br><span class="line"><span class="meta"> ---&gt;</span><span class="bash"> 53f7b2ae41d3</span></span><br><span class="line">Successfully built 53f7b2ae41d3</span><br><span class="line">Successfully tagged friendlyhello:latest</span><br></pre></td></tr></table></figure>
+<p>这个时候我们就可以查看到刚才新建的image</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash">  docker image ls</span></span><br><span class="line">REPOSITORY          TAG                 IMAGE ID            CREATED                  SIZE</span><br><span class="line">python              2.7-slim            48e3247f2a19        Less than a second ago   120MB</span><br><span class="line">friendlyhello       latest              53f7b2ae41d3        14 seconds ago           131MB</span><br></pre></td></tr></table></figure>
+<h4 id="运行程序"><a href="#运行程序" class="headerlink" title="运行程序"></a>运行程序</h4><p>但是这个时候只是新建了一个image，它还没开始运行。所以如果要把这个image跑起来，可以执行下面的指令，并且把容器的80端口与本地的4000端口绑定起来做一个映射的关系。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker run -p 4000:80 friendlyhello</span><br></pre></td></tr></table></figure>
+<p>于是运行可以看到</p>
+<p><img src="localhost.png" alt></p>
+<p>如果要让container在后台运行，就需要在运行的时候加上<code>detached</code>状态</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker run -d -p 4000:80 friendlyhello</span><br></pre></td></tr></table></figure>
+<p>于是这是就可以通过<code>docker container ls</code>来查看刚刚运行的<code>container</code></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> docker container ls</span></span><br><span class="line">CONTAINER ID        IMAGE               COMMAND             CREATED             STATUS              PORTS                  NAMES</span><br><span class="line">8afe24b60ce3        friendlyhello       "python app.py"     2 minutes ago       Up 2 minutes        0.0.0.0:4000-&gt;80/tcp   lucid_snyder</span><br></pre></td></tr></table></figure>
+<p>然后用<code>docker container stop</code>来中止后台的容器，例如结束刚刚运行的容器</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> docker container stop 8afe24b60ce3</span></span><br><span class="line">8afe24b60ce3</span><br></pre></td></tr></table></figure>
+
+  </article>
+  
+    <aside class="passage-copyright">
+      <div>本文作者: 曾广韬</div>
+      
+        <div>
+          原文链接: 
+          <a href target="_blank">https://ChaosCodes.github.io/2019/04/02/Docker学习日记-Day1/</a>
+        </div>
+      
+      <div>
+        版权声明: 本博客所有文章除特别声明外, 均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议. 转载请注明出处!
+      </div>
+    </aside>
+  
+  <aside class="table-content" id="site-toc">
+  <div class="table-content-title">
+    <i class="fa fa-arrow-right fa-lg" id="site-toc-hide-btn"></i>
+    <span>目录</span>
+  </div>
+  <div class="table-content-main">
+    <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#概念"><span class="toc-text">概念</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#容器化的特性"><span class="toc-text">容器化的特性</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Images与containers"><span class="toc-text">Images与containers</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#容器与虚拟机对比"><span class="toc-text">容器与虚拟机对比</span></a></li></ol><li class="toc-item toc-level-3"><a class="toc-link" href="#安装及测试"><span class="toc-text">安装及测试</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#在Centos安装"><span class="toc-text">在Centos安装</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#小报错以及解决方案"><span class="toc-text">小报错以及解决方案</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Docker使用"><span class="toc-text">Docker使用</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Dockfile"><span class="toc-text">Dockfile</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#需求文件"><span class="toc-text">需求文件</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#新建镜像"><span class="toc-text">新建镜像</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#运行程序"><span class="toc-text">运行程序</span></a></li></ol></li>
+  </div>
+</aside>
+  
+</div>
+
+    </main>
+    
+      <div class="site-comment-contanier">
+  <p id="site-comment-info">
+    <i class="fa fa-spinner fa-spin"></i> 评论加载中
+  </p>
+  <div id="site-comment">
+  </div>
+</div>
+    
+    <div class="site-footer-wrapper">
+  <footer class="site-footer">
+    
+      <div class="site-footer-col">
+        <h5 class="site-footer-title">相关推荐学习网站</h5>
+        
+          <span class="site-footer-item">
+            <a href="https://www.coursera.org/" target="_blank">couresa</a>
+          </span>
+        
+      </div>
+    
+    <!-- <div class="site-footer-info">
+      <i class="fa fa-clock-o"></i> 本站已稳定运行<span id="site-time"></span>
+    </div> -->
+    
+    
+      <div class="site-footer-info">
+        <i class="fa fa-at"></i> Email: kids937@foxmail.co
+      </div>
+    
+    <div class="site-footer-info">
+      <i class="fa fa-copyright"></i> 
+      2019 <a href="https://github.com/dongyuanxin/theme-ad/" target="_blank">Theme-AD</a>.
+      Created by <a href="https:/godbmw.com/" target="_blank">GodBMW</a>.
+      All rights reserved.
+    </div>
+  </footer>
+</div>
+    <div id="site-layer" style="display:none;">
+  <div class="site-layer-content">
+    <div class="site-layer-header">
+      <span class="site-layer-header-title" id="site-layer-title"></span>
+      <i class="fa fa-close" id="site-layer-close"></i>
+    </div>
+    <div class="site-layer-body" id="site-layer-container">
+      <div class="site-layer-input" id="site-layer-search" style="display: none;">
+        <input type="text">
+        <i class="fa fa-search"></i>
+      </div>
+      <div class="site-layer-reward" id="site-layer-reward" style="display: none;">
+        
+          <div>
+            <img src="/images/wechat.png" alt="WeChat">
+            
+              <p>WeChat</p>
+            
+          </div>
+        
+          <div>
+            <img src="/images/alipay.png" alt="AliPay">
+            
+              <p>AliPay</p>
+            
+          </div>
+        
+      </div>
+      <div id="site-layer-welcome" style="display:none;"></div>
+    </div>
+  </div>
+</div>
+    
+
+<div class="bottom-bar">
+  <div class="bottom-bar-left">
+    <a href="javascript:void(0);" data-enable="false">
+      <i class="fa fa-arrow-left"></i>
+    </a>
+    <a href="/2019/04/01/软件系统分析与设计之二/" data-enable="true">
+      <i class="fa fa-arrow-right"></i>
+    </a>
+  </div>
+  <div class="bottom-bar-right">
+    <a href="javascript:void(0);" data-enable="true" id="site-toc-show-btn">
+      <i class="fa fa-bars"></i>
+    </a>
+    
+      <a href="#site-comment" data-enable="true">
+        <i class="fa fa-commenting"></i>
+      </a>
+    
+    <a href="javascript:void(0);" id="site-toggle-share-btn">
+      <i class="fa fa-share-alt"></i>
+    </a>
+    <a href="javascript:void(0);" id="site-reward">
+      <i class="fa fa-thumbs-up"></i>
+    </a>
+    <a href="javascript:void(0);" id="back-top-btn">
+      <i class="fa fa-chevron-up"></i>
+    </a>
+  </div>
+</div>
+    <div id="share-btn">
+  
+    <a id="share-btn-twitter" href="javascript:void(0);" target="_blank">
+      <i class="fa fa-twitter"></i>
+    </a>
+  
+  
+    <a id="share-btn-facebook" href="javascript:void(0);" target="_blank">
+      <i class="fa fa-facebook"></i>
+    </a>
+  
+  
+    <a id="share-btn-weibo" href="javascript:void(0);" target="_blank">
+      <i class="fa fa-weibo"></i>
+    </a>
+  
+  
+    <a id="share-btn-qq" href="javascript:void(0);" target="_blank">
+      <i class="fa fa-qq"></i>
+    </a>
+  
+  
+    <a id="share-btn-wechat" href="javascript:void(0);" target="_blank">
+      <i class="fa fa-wechat"></i>
+    </a>
+  
+</div>
+  </body>
+</html>
