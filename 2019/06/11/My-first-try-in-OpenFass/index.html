@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html>
+  
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="utf-8">
+  <meta name="author" content="Zeng Guangtao">
+  
+  
+  <title>My first try in OpenFass | Chaos Codes</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="OpenFaas,">
+  
+
+  
+  <meta name="description" content="Chaos_Site">
+
+  
+
+  <script src="//cdn.jsdelivr.net/npm/leancloud-storage@3.11.1/dist/av-min.js" async></script>
+
+  
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML" async></script>
+  
+
+  
+    <script src="//unpkg.com/valine/dist/Valine.min.js" async></script>
+  
+
+  <script>
+  // theme-ad's config script
+  // it can be used in every script
+  
+  window.AD_CONFIG = {
+    leancloud: {"appid":"30aez2Xj5kLeavizPUYvJTxY-gzGzoHsz","appkey":"mF5hceF2SeM6mArzNCvH2KfD","comment":true,"count":false},
+    welcome: {"enable":true,"interval":30},
+    start_time: "2018-02-27",
+    passwords: ["efe07af7441da2b69c4a41e42e73be4db47f66010a56900788a458354a7373ec", ],
+    is_post: true,
+    lock: false,
+    author: "Zeng Guangtao",
+    share: {"twitter":true,"facebook":true,"weibo":true,"qq":true,"wechat":true},
+    mathjax: true,
+    page_type: ""
+  };
+</script>
+
+  <script src="/vendor/sha256.min.js"></script>
+<script src="/js/auth.js"></script>
+<script src="/js/index.js"></script>
+<script src="/vendor/qrcode.min.js"></script>
+
+  
+    <link rel="icon" href="/images/favicon.ico">
+    <link rel="apple-touch-icon" href="/images/touch-icon.png">
+  
+
+  <link href="//netdna.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+
+  <link rel="stylesheet" href="/css/index.css">
+<link rel="stylesheet" href="/styles/components/highlight/highlight.css">
+
+  
+
+  
+
+
+
+</head>
+  <body>
+    <header class="site-header">
+  <div class="site-header-brand">
+    
+      <span class="site-header-brand-title">
+        <a href="/">Chaos</a>
+      </span>
+    
+    
+      <span class="site-header-brand-motto"> | Something for blogs</span>
+    
+  </div>
+  <div class="site-header-right">
+    <nav class="site-header-navigation">
+      
+        <a href="/" target="_self">首页</a>
+      
+        <a href="/archives/" target="_self">归档</a>
+      
+    </nav>
+    <div class="site-header-btn">
+      
+        <a href="https://github.com/ChaosCodes/" target="_blank">
+          <i class="fa fa-github-alt"></i>
+        </a>
+      
+      <a href="javascript:void(0);" id="site-search">
+        <i class="fa fa-search"></i>
+      </a>
+    </div>
+  </div>
+</header>
+<div id="site-process"></div>
+    <main>
+      
+  <div class="passage">
+  <div class="passage-meta">
+    <span>
+      <i class="fa fa-calendar"></i>2019-06-11
+    </span>
+    
+    
+      <span>
+        | <i class="fa fa-unlock-alt"></i>UNLOCK
+      </span>
+    
+  </div>
+  <h1 class="passage-title">
+    My first try in OpenFass
+  </h1>
+  
+  <article class="passage-article">
+    <h2 id="My-first-try-in-OpenFass"><a href="#My-first-try-in-OpenFass" class="headerlink" title="My first try in OpenFass"></a>My first try in OpenFass</h2><blockquote>
+<p><em>This post records my first attempt in OpenFass, which contains several problems and corresponding solutions I met.</em></p>
+</blockquote>
+<h3 id="Build-Virtual-Machine"><a href="#Build-Virtual-Machine" class="headerlink" title="Build Virtual Machine"></a>Build Virtual Machine</h3><p>Due to lack of Raspberry Pis, I turn to Virtual Machine to simulate the environment and begin the tutorial. You can read the post <a href="https://chaoscodes.github.io/2019/03/09/Series-1-of-the-Research-Training/">Steps to build VMs</a> for specific steps.</p>
+<p>Besides the steps in that post，I choose birdge as the network model and install <strong><em>oh-my-zsh</em></strong> for a more powerful shell.</p>
+<h4 id="Zsh-install"><a href="#Zsh-install" class="headerlink" title="Zsh install"></a>Zsh install</h4><ol>
+<li><strong>Install zsh packet</strong></li>
+</ol>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> yum -y install zsh</span></span><br></pre></td></tr></table></figure>
+<ol start="2">
+<li><strong>Switch zsh as default shell</strong></li>
+</ol>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> chsh -s /bin/zsh</span></span><br></pre></td></tr></table></figure>
+<ol start="3">
+<li><strong>Install “on my zsh”</strong></li>
+</ol>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">curl sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"</span><br></pre></td></tr></table></figure>
+<p>###Function as a service</p>
+<p><strong>Functions as a Service</strong> is a framework for building Serverless functions on top of containers. In short “Serverless” is a misnomer - a new architectural pattern for event-driven systems. For this reason serverless functions are often used as connective glue between other services or in an event-driven architecture.</p>
+<h3 id="Create-Swarm-cluster"><a href="#Create-Swarm-cluster" class="headerlink" title="Create Swarm cluster"></a>Create Swarm cluster</h3><h4 id="Install-docker"><a href="#Install-docker" class="headerlink" title="Install docker"></a>Install docker</h4><p>Here I prepare 2 vms to form the cluster, and first of all, install docker.</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> curl -fsSL https://get.docker.com/ | sh</span></span><br></pre></td></tr></table></figure>
+<p>Then, start the docker service</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> sudo systemctl start docker</span></span><br></pre></td></tr></table></figure>
+<p>Now we can see that the docker is active:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> sudo systemctl status docker</span></span><br><span class="line">● docker.service - Docker Application Container Engine</span><br><span class="line">   Loaded: loaded (/usr/lib/systemd/system/docker.service; enabled; vendor preset: disabled)</span><br><span class="line">   Active: active (running) since 一 2019-06-10 09:33:50 EDT; 8s ago</span><br><span class="line">     Docs: https://docs.docker.com</span><br><span class="line"> Main PID: 35887 (dockerd)</span><br><span class="line">    Tasks: 8</span><br><span class="line">   Memory: 32.4M</span><br><span class="line">   CGroup: /system.slice/docker.service</span><br><span class="line">           └─35887 /usr/bin/dockerd -H fd:// --containerd=/run/containerd/contain...</span><br></pre></td></tr></table></figure>
+<h4 id="Initialize-swarm-manager-node"><a href="#Initialize-swarm-manager-node" class="headerlink" title="Initialize swarm manager node"></a>Initialize swarm manager node</h4><p>To create a swarm cluster, there must be a manage node that can dispatch the task. We can select one of the vms and run command below.(Only need to run in the one vm that you choose as a master.)</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> docker swarm init</span></span><br><span class="line">docker swarm init</span><br><span class="line">Swarm initialized: current node (2nqd9opg0c8xw6sg6r7n06vzl) is now a manager.</span><br><span class="line"></span><br><span class="line">To add a worker to this swarm, run the following command:</span><br><span class="line"></span><br><span class="line">    docker swarm join --token SWMTKN-1-1jqi3cvr4ms32r9mha91l5f1m2s1or0r8kzkrv412b8l6u3kub-di2gvhrv38j5jsbti0s68wd39 192.168.1.19:2377</span><br><span class="line"></span><br><span class="line">To add a manager to this swarm, run 'docker swarm join-token manager' and follow the instructions.</span><br></pre></td></tr></table></figure>
+<h4 id="Add-worker-to-swarm"><a href="#Add-worker-to-swarm" class="headerlink" title="Add worker to swarm"></a>Add worker to swarm</h4><p>From the initial output we can see the join token and the command to type into the other vm to join the swarm. </p>
+<p>So, here we enter the other vm and run command.</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> docker swarm join --token SWMTKN-1-1jqi3cvr4ms32r9mha91l5f1m2s1or0r8kzkrv412b8l6u3kub-di2gvhrv38j5jsbti0s68wd39 192.168.1.19:2377</span></span><br><span class="line">This node joined a swarm as a worker.</span><br></pre></td></tr></table></figure>
+<p>Now we can check all my nodes in the manager.</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> docker node ls</span></span><br><span class="line">ID                            HOSTNAME                STATUS              AVAILABILITY        MANAGER STATUS      ENGINE VERSION</span><br><span class="line">2nqd9opg0c8xw6sg6r7n06vzl *   localhost.localdomain   Ready               Active              Leader              18.09.6</span><br><span class="line">btzn8j7ds4eo18y5dem8qcwft     localhost.localdomain   Ready               Active                                  18.09.6</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p><strong>Maybe it will throw an error when you add a worker.</strong></p>
+<p>Error response from daemon: rpc error: code = Unavailable desc = all SubConns are in TransientFailure, latest connection error: connection error: desc = “transport: Error while dialing dial tcp 10.211.55.3:2377: connect: no route to host”</p>
+<p><strong>Solution:</strong></p>
+<p>Just turn off the firewall by run command <code>sudo systemctl stop firewalld</code>.</p>
+</blockquote>
+<h3 id="OpenFaaS"><a href="#OpenFaaS" class="headerlink" title="OpenFaaS"></a>OpenFaaS</h3><p>Now I move on to deploying a real application to enable Serverless functions to run on the cluster.</p>
+<h4 id="Build-up-OpenFaas"><a href="#Build-up-OpenFaas" class="headerlink" title="Build up OpenFaas"></a>Build up OpenFaas</h4><p>Get into the vm that serves as the manager and clone and deploy OpenFaas.</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> git <span class="built_in">clone</span> https://github.com/alexellis/faas/</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> <span class="built_in">cd</span> faas</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> ./deploy_stack.sh</span></span><br><span class="line"></span><br><span class="line">Attempting to create credentials for gateway..</span><br><span class="line">uzp0ezwhu2i05cl8sujgpn7tq</span><br><span class="line">ukpztvpguicbu0yu7vv8tfslp</span><br><span class="line">[Credentials]\n username: admin \n password: 9c2b624c6f76b0e55374d302c66bbf34f9c5d213b6ab2af1e554d1ba1d2b90a6\n echo -n 9c2b624c6f76b0e55374d302c66bbf34f9c5d213b6ab2af1e554d1ba1d2b90a6 | faas-cli login --username=admin --password-stdin</span><br><span class="line"></span><br><span class="line">Enabling basic authentication for gateway..</span><br><span class="line"></span><br><span class="line">Deploying OpenFaaS core services</span><br><span class="line">Creating network func_functions</span><br><span class="line">Creating config func_prometheus_config</span><br><span class="line">Creating config func_prometheus_rules</span><br><span class="line">Creating config func_alertmanager_config</span><br><span class="line">Creating service func_gateway</span><br><span class="line">Creating service func_basic-auth-plugin</span><br><span class="line">Creating service func_faas-swarm</span><br><span class="line">Creating service func_nats</span><br><span class="line">Creating service func_queue-worker</span><br><span class="line">Creating service func_prometheus</span><br><span class="line">Creating service func_alertmanager</span><br></pre></td></tr></table></figure>
+<p>We can get the username and password from the output. Note that carefully, and they will be required in the latter step. The process will take a few minutes, rum command below and we can check their status.</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> watch <span class="string">'docker service ls'</span></span></span><br><span class="line">Every 2.0s: docker service ls                                                                                                         Mon Jun 10 14:01:16 2019</span><br><span class="line"></span><br><span class="line">ID                  NAME                     MODE                REPLICAS            IMAGE                              PORTS</span><br><span class="line">y8v1715n5z95        func_alertmanager        replicated          1/1                 prom/alertmanager:v0.16.1</span><br><span class="line">bjzeek2a0bhr        func_basic-auth-plugin   replicated          1/1                 openfaas/basic-auth-plugin:0.1.1</span><br><span class="line">yeqnmrjdgz70        func_faas-swarm          replicated          1/1                 openfaas/faas-swarm:0.6.2</span><br><span class="line">wqqttp163kpq        func_gateway             replicated          1/1                 openfaas/gateway:0.13.7-rc5        *:8080-&gt;8080/tcp</span><br><span class="line">qa73va6nowrh        func_nats                replicated          1/1                 nats-streaming:0.11.2</span><br><span class="line">nf2wu1s1h9w4        func_prometheus          replicated          1/1                 prom/prometheus:v2.7.1             *:9090-&gt;9090/tcp</span><br><span class="line">4gocpxua0h83        func_queue-worker        replicated          1/1                 openfaas/queue-worker:0.7.2</span><br></pre></td></tr></table></figure>
+<p>They will be done when the REPLICAS comes to 1/1. Then we can continue the tutorial.</p>
+<p>Because I use Centos to simulate the Raspberry Pi, we run <code>ip addr</code> to get the IP address, and we get 192.168.1.19.</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">ip addr</span><br><span class="line">1: lo: &lt;LOOPBACK,UP,LOWER_UP&gt; mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000</span><br><span class="line">    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00</span><br><span class="line">    inet 127.0.0.1/8 scope host lo</span><br><span class="line">       valid_lft forever preferred_lft forever</span><br><span class="line">    inet6 ::1/128 scope host </span><br><span class="line">       valid_lft forever preferred_lft forever</span><br><span class="line">2: ens33: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc pfifo_fast state UP group default qlen 1000</span><br><span class="line">    link/ether 00:0c:29:01:3f:72 brd ff:ff:ff:ff:ff:ff</span><br><span class="line">    inet 192.168.1.19/24 brd 192.168.1.255 scope global noprefixroute dynamic ens33</span><br><span class="line">       valid_lft 63258sec preferred_lft 63258sec</span><br><span class="line">    inet6 fe80::121a:f125:bbe9:4416/64 scope link noprefixroute </span><br><span class="line">       valid_lft forever preferred_lft forever</span><br></pre></td></tr></table></figure>
+<h3 id="Web-Servive-in-Virtual-Machine"><a href="#Web-Servive-in-Virtual-Machine" class="headerlink" title="Web Servive in Virtual Machine"></a>Web Servive in Virtual Machine</h3><p>But at the first time, I can not get access to the server in my Host machine. I try to curl, but get a refuse message.</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> curl 192.168.1.19:8080</span></span><br><span class="line">curl: (28) Operation timed out.</span><br></pre></td></tr></table></figure>
+<p>In order to find the problem, I create a new vm to set up a similar environment. I set up a flask server and manage to find the reason.</p>
+<h4 id="Difference-Between-127-0-0-1-and-0-0-0-0"><a href="#Difference-Between-127-0-0-1-and-0-0-0-0" class="headerlink" title="Difference Between 127.0.0.1 and 0.0.0.0"></a>Difference Between 127.0.0.1 and 0.0.0.0</h4><p>But what takes me a lot time to figure out first is my wrong setting to the listenning IP host. </p>
+<h5 id="127-0-0-1"><a href="#127-0-0-1" class="headerlink" title="127.0.0.1"></a>127.0.0.1</h5><p>127.0.0.1 is the loopback Internet protocol (IP) address also referred to as the <em>localhost</em>. The address is used to establish an IP connection to the same machine or computer being used by the end-user.</p>
+<h5 id="0-0-0-0"><a href="#0-0-0-0" class="headerlink" title="0.0.0.0"></a>0.0.0.0</h5><p>0.0.0.0 is a valid address syntax. So it should parse as valid wherever an IP address in traditional dotted-decimal notation is expected. Once parsed and converted to workable numeric form, then its value determines what happens next.</p>
+<p>So, because I set 127.0.0.1 as my host, the network packet can not be delivered to the public network, and thus we can not get the network packet from the other network interface controller.</p>
+<h4 id="Firework-in-Centos"><a href="#Firework-in-Centos" class="headerlink" title="Firework in Centos"></a>Firework in Centos</h4><p>After I change the host to 0.0.0.0, it still doesn’t work. Quickly I wonder whether the Centos keep away the request from my host machine. So I check the firewall in the vm.</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> sudo systemctl status firewalld</span></span><br><span class="line">● firewalld.service - firewalld - dynamic firewall daemon</span><br><span class="line">   Loaded: loaded (/usr/lib/systemd/system/firewalld.service; disabled; vendor preset: enabled)</span><br><span class="line">   Active: inactive (dead)</span><br><span class="line">     Docs: man:firewalld(1)</span><br></pre></td></tr></table></figure>
+<p>But what surprises me is that the firewall in Centos does be turn off. I doubt myself and continue to search solution in Google. Finally I get a amazing command.</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> iptables -F</span></span><br></pre></td></tr></table></figure>
+<p>The command seems like to shut down the firewall thoroughly, but I cannot get more detail in Google. However, the web server problem is solved by the command.</p>
+<p>Now, we can see the Faas UI in host machine.</p>
+<p><img src="faas_Ui.png" alt="faas_Ui"></p>
+<h3 id="Deploy-the-first-python-serverless-function"><a href="#Deploy-the-first-python-serverless-function" class="headerlink" title="Deploy the first python serverless function"></a>Deploy the first python serverless function</h3><p>First, get the Faas-Cli.</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> curl -sSL cli.openfaas.com | sudo sh</span></span><br><span class="line">which: no faas-cli in (/sbin:/bin:/usr/sbin:/usr/bin)</span><br><span class="line">x86_64</span><br><span class="line">Downloading package https://github.com/openfaas/faas-cli/releases/download/0.8.14/faas-cli as /tmp/faas-cli</span><br><span class="line">Download complete.</span><br></pre></td></tr></table></figure>
+<p>Check whether Faas-Cli has been installed.</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> faas-cli version</span></span><br><span class="line">  ___                   _____           ____</span><br><span class="line"> / _ \ _ __   ___ _ __ |  ___|_ _  __ _/ ___|</span><br><span class="line">| | | | '_ \ / _ \ '_ \| |_ / _` |/ _` \___ \</span><br><span class="line">| |_| | |_) |  __/ | | |  _| (_| | (_| |___) |</span><br><span class="line"> \___/| .__/ \___|_| |_|_|  \__,_|\__,_|____/</span><br><span class="line">      |_|</span><br><span class="line"></span><br><span class="line">CLI:</span><br><span class="line"> commit:  25cada08609e00bed526790a6bdd19e49ca9aa63</span><br><span class="line"> version: 0.8.14</span><br></pre></td></tr></table></figure>
+<h3 id="Write-first-python-function"><a href="#Write-first-python-function" class="headerlink" title="Write first python function"></a>Write first python function</h3><p>Create a new folder</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> mkdir -p ~/<span class="built_in">functions</span> &amp;&amp; \</span></span><br><span class="line">  cd ~/functions</span><br></pre></td></tr></table></figure>
+<p>Then use Faas-Cli to scaffold a new Python function</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> faas-cli new --lang python hello-python</span></span><br></pre></td></tr></table></figure>
+<p>It will create three fills in the folder</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">+ hello-python</span><br><span class="line">  - handler.py</span><br><span class="line">  - requirements.txt</span><br><span class="line">- hello-python.yml</span><br></pre></td></tr></table></figure>
+<p>So edit the <em>handler.py</em> as the tutorial</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">handle</span><span class="params">(req)</span>:</span></span><br><span class="line">    print(<span class="string">"Hello! You said: "</span> + req)</span><br></pre></td></tr></table></figure>
+<p> Then edit <em>hello-python.yml</em>:</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">version:</span> <span class="number">1.0</span></span><br><span class="line"><span class="attr">provider:</span></span><br><span class="line"><span class="attr">  name:</span> <span class="string">openfaas</span></span><br><span class="line"><span class="attr">  gateway:</span> <span class="attr">https://localhost:8080</span></span><br><span class="line"><span class="attr">functions:</span></span><br><span class="line"><span class="attr">  hello-python:</span></span><br><span class="line"><span class="attr">    lang:</span> <span class="string">python</span></span><br><span class="line"><span class="attr">    handler:</span> <span class="string">./hello-python</span></span><br><span class="line"><span class="attr">    image:</span> <span class="attr">hello-python:latest</span></span><br></pre></td></tr></table></figure>
+<p>###Build the python function</p>
+<p>let’s build the function.</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> faas-cli build -f ./hello-python.yml</span></span><br><span class="line">...</span><br><span class="line">Successfully built a0287e7a1b13</span><br><span class="line">Successfully tagged hello-python:latest</span><br><span class="line">Image: hello-python:latest built.</span><br></pre></td></tr></table></figure>
+<p>If you want to push the function’s image to a registry or the Docker Hub. Run command.</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> faas-cli push -f ./hello-python.yml</span></span><br><span class="line"></span><br><span class="line">Unable to push one or more of your functions to Docker Hub:</span><br><span class="line">- hello-python</span><br><span class="line"></span><br><span class="line">You must provide a username or registry prefix to the Function's image such as user1/function1</span><br></pre></td></tr></table></figure>
+<p>It seem to fail and I found that in order to push a Docker image to the registered public Docker hub repository, we need to first login with our registered credentials. Besides, the name of the images should be like user1/function1.</p>
+<p>After login in Docker by <code>docker login</code> and rename the image, the push succeed.</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> faas-cli push -f ./hello-python.yml</span></span><br><span class="line">[0] &gt; Pushing hello-python [chaos937/hello-python:latest].</span><br><span class="line">The push refers to repository [docker.io/chaos937/hello-python]</span><br><span class="line">...</span><br><span class="line">[0] &lt; Pushing hello-python [chaos937/hello-python:latest] done.</span><br><span class="line">[0] worker done.</span><br></pre></td></tr></table></figure>
+<p>Now we can check in <a href="https://hub.docker.com/" target="_blank" rel="noopener">Docker Hub</a> and found that the image has been pushed to the repository.</p>
+<p><img src="dockerhub.png" alt="dockerhub"></p>
+<h3 id="Deploy-the-python-function"><a href="#Deploy-the-python-function" class="headerlink" title="Deploy the python function"></a>Deploy the python function</h3><p>After building, it’s time to deploy the function.</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> faas-cli deploy -f ./hello-python.yml</span></span><br><span class="line">Deploying: hello-python.</span><br><span class="line">WARNING! Communication is not secure, please consider using HTTPS. Letsencrypt.org offers free SSL/TLS certificates.</span><br><span class="line"></span><br><span class="line">unauthorized access, run "faas-cli login" to setup authentication for this server</span><br><span class="line"></span><br><span class="line">Function 'hello-python' failed to deploy with status code: 401</span><br></pre></td></tr></table></figure>
+<p>Similar failure hit me. The output tell me that I have no authority to access. Remember OpenFaaS uses basic-auth protection. Hence, we first need to authenticate with the API gateway <a href="http://192.168.1.19:8080" target="_blank" rel="noopener">http://192.168.1.19:8080</a> using the basic-auth credentials.</p>
+<blockquote>
+<p>Username and password are shown in the output of command <code>./deploy_stack.sh</code></p>
+</blockquote>
+<p>Login in faas-cli</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> <span class="built_in">echo</span> -n 9c2b624c6f76b0e55374d302c66bbf34f9c5d213b6ab2af1e554d1ba1d2b90a6 | faas-cli login --username=admin --password-stdin --gateway http://192.168.1.19:8080  </span></span><br><span class="line">Calling the OpenFaaS server to validate the credentials...</span><br><span class="line">WARNING! Communication is not secure, please consider using HTTPS. Letsencrypt.org offers free SSL/TLS certificates.</span><br><span class="line">credentials saved for admin http://192.168.1.19:8080</span><br></pre></td></tr></table></figure>
+<p>Again deploy the function.</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> faas-cli deploy -f hello-python.yml --gateway http://192.168.1.19:8080  </span></span><br><span class="line">Deploying: hello-python.</span><br><span class="line">WARNING! Communication is not secure, please consider using HTTPS. Letsencrypt.org offers free SSL/TLS certificates.</span><br><span class="line"></span><br><span class="line">Deployed. 202 Accepted.</span><br><span class="line">URL: http://192.168.1.19:8080/function/hello-python</span><br></pre></td></tr></table></figure>
+<p>Now we can see <em>hello-python</em> in Faas-Cli UI.</p>
+<p><img src="hello-python.png" alt="hello-python"></p>
+<p>Use <code>curl</code> to call it in terminal and we can get the response:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> curl http://192.168.1.19:8080/<span class="keyword">function</span>/hello-python -d  <span class="string">"it's tao here"</span></span></span><br><span class="line">Hello!, you said: it's tao here</span><br></pre></td></tr></table></figure>
+<p>In addition, we can also use faas-cli to list and invoke functions.</p>
+<h5 id="List"><a href="#List" class="headerlink" title="List"></a>List</h5><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> faas-cli list</span></span><br><span class="line">Function                      	Invocations    	Replicas</span><br><span class="line">hello-python                  	6              	1</span><br></pre></td></tr></table></figure>
+<p>Here, we can easily know how many times the functions call and their replicas.</p>
+<h5 id="Invoke"><a href="#Invoke" class="headerlink" title="Invoke"></a>Invoke</h5><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> <span class="built_in">echo</span> <span class="string">"hello"</span> | faas-cli invoke hello-python</span></span><br><span class="line">Hello!, you said: hello</span><br></pre></td></tr></table></figure>
+<p>We can also use fans-cli to invoke the function just like the command above.</p>
+<h3 id="Write-Python-fuction-with-3rd-party-dependencies"><a href="#Write-Python-fuction-with-3rd-party-dependencies" class="headerlink" title="Write Python fuction with 3rd party dependencies"></a>Write Python fuction with 3rd party dependencies</h3><p>Let’s look back at the file <code>hello-python/requirements.txt</code>. You can use <code>pip</code> by providing the file along with your function handler.</p>
+<p>Here we add the request in <code>requirements.txt</code>:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">request</span><br></pre></td></tr></table></figure>
+<p>And then update the Python code</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> requests</span><br><span class="line"><span class="keyword">import</span> json</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">handle</span><span class="params">(req)</span>:</span></span><br><span class="line">    result = &#123;<span class="string">"found"</span>: <span class="literal">False</span>&#125;</span><br><span class="line">    json_req = json.loads(req)</span><br><span class="line">    r = requests.get(json_req[<span class="string">"url"</span>])</span><br><span class="line">    <span class="keyword">if</span> json_req[<span class="string">"term"</span>] <span class="keyword">in</span> r.text:</span><br><span class="line">        result = &#123;<span class="string">"found"</span>: <span class="literal">True</span>&#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">print</span> json.dumps(result)</span><br></pre></td></tr></table></figure>
+<p>Rebuild and re-deploy.</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> faas-cli build -f ./hello-python.yml &amp;&amp; \</span></span><br><span class="line">  faas-cli deploy -f ./hello-python.yml</span><br></pre></td></tr></table></figure>
+<p>Test the new function:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> curl http://192.168.1.19:8080/<span class="keyword">function</span>/hello-python --data-binary <span class="string">'&#123;</span></span></span><br><span class="line"><span class="meta">quote&gt;</span><span class="bash">  <span class="string">"url"</span>: <span class="string">"https://www.baicu.com"</span>,</span></span><br><span class="line"><span class="meta">quote&gt;</span><span class="bash">  <span class="string">"term"</span>: <span class="string">"baidu"</span></span></span><br><span class="line"><span class="meta">quote&gt;</span><span class="bash"> &#125;<span class="string">'</span></span></span><br><span class="line">&#123;"found": true&#125;</span><br></pre></td></tr></table></figure>
+<p>It works!</p>
+<h3 id="Data-Analysis"><a href="#Data-Analysis" class="headerlink" title="Data Analysis"></a>Data Analysis</h3><p>Faas-Cli can do more about the functions.</p>
+<p><a href="https://github.com/prometheus" target="_blank" rel="noopener">Prometheus</a> is an open-source systems monitoring and alerting toolkit originally built at SoundCloud, which means you can checkout the various metrics on how your functions are being used as well as how long they’re taking to run.</p>
+<p>We can view the Prometheus UI at <a href="http://192.168.1.19:9090" target="_blank" rel="noopener">http://192.168.1.19:9090</a>.</p>
+<p><img src="metrics.png" alt="metrics"></p>
+<h3 id="In-Conclusion"><a href="#In-Conclusion" class="headerlink" title="In Conclusion"></a>In Conclusion</h3><p>This is my first time to take a journay in OpenFaas. During the attempt, I find it interesting to deploy a service in OpenFaas due to its lightweight and flexible service. I will continue to explore more in the field.</p>
+
+  </article>
+  
+    <aside class="passage-copyright">
+      <div>本文作者: 曾广韬</div>
+      
+        <div>
+          原文链接: 
+          <a href target="_blank">https://ChaosCodes.github.io/2019/06/11/My-first-try-in-OpenFass/</a>
+        </div>
+      
+      <div>
+        版权声明: 本博客所有文章除特别声明外, 均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议. 转载请注明出处!
+      </div>
+    </aside>
+  
+  <aside class="table-content" id="site-toc">
+  <div class="table-content-title">
+    <i class="fa fa-arrow-right fa-lg" id="site-toc-hide-btn"></i>
+    <span>目录</span>
+  </div>
+  <div class="table-content-main">
+    <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#My-first-try-in-OpenFass"><span class="toc-text">My first try in OpenFass</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Build-Virtual-Machine"><span class="toc-text">Build Virtual Machine</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Zsh-install"><span class="toc-text">Zsh install</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Create-Swarm-cluster"><span class="toc-text">Create Swarm cluster</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Install-docker"><span class="toc-text">Install docker</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Initialize-swarm-manager-node"><span class="toc-text">Initialize swarm manager node</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Add-worker-to-swarm"><span class="toc-text">Add worker to swarm</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#OpenFaaS"><span class="toc-text">OpenFaaS</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Build-up-OpenFaas"><span class="toc-text">Build up OpenFaas</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Web-Servive-in-Virtual-Machine"><span class="toc-text">Web Servive in Virtual Machine</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Difference-Between-127-0-0-1-and-0-0-0-0"><span class="toc-text">Difference Between 127.0.0.1 and 0.0.0.0</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#127-0-0-1"><span class="toc-text">127.0.0.1</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#0-0-0-0"><span class="toc-text">0.0.0.0</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Firework-in-Centos"><span class="toc-text">Firework in Centos</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Deploy-the-first-python-serverless-function"><span class="toc-text">Deploy the first python serverless function</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Write-first-python-function"><span class="toc-text">Write first python function</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Deploy-the-python-function"><span class="toc-text">Deploy the python function</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#List"><span class="toc-text">List</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#Invoke"><span class="toc-text">Invoke</span></a></li></ol></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Write-Python-fuction-with-3rd-party-dependencies"><span class="toc-text">Write Python fuction with 3rd party dependencies</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Data-Analysis"><span class="toc-text">Data Analysis</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#In-Conclusion"><span class="toc-text">In Conclusion</span></a></li></ol>
+  </div>
+</aside>
+  
+    <div class="passage-tags">
+     
+      <a href="/tags/OpenFaas/"><i class="fa fa-tags"></i>OpenFaas</a>
+    
+    </div>
+  
+</div>
+
+    </main>
+    
+      <div class="site-comment-contanier">
+  <p id="site-comment-info">
+    <i class="fa fa-spinner fa-spin"></i> 评论加载中
+  </p>
+  <div id="site-comment">
+  </div>
+</div>
+    
+    <div class="site-footer-wrapper">
+  <footer class="site-footer">
+    
+      <div class="site-footer-col">
+        <h5 class="site-footer-title">相关推荐学习网站</h5>
+        
+          <span class="site-footer-item">
+            <a href="https://www.coursera.org/" target="_blank">couresa</a>
+          </span>
+        
+      </div>
+    
+    <!-- <div class="site-footer-info">
+      <i class="fa fa-clock-o"></i> 本站已稳定运行<span id="site-time"></span>
+    </div> -->
+    
+    
+      <div class="site-footer-info">
+        <i class="fa fa-at"></i> Email: kids937@foxmail.co
+      </div>
+    
+    <div class="site-footer-info">
+      <i class="fa fa-copyright"></i> 
+      2019 <a href="https://github.com/dongyuanxin/theme-ad/" target="_blank">Theme-AD</a>.
+      Created by <a href="https:/godbmw.com/" target="_blank">GodBMW</a>.
+      All rights reserved.
+    </div>
+  </footer>
+</div>
+    <div id="site-layer" style="display:none;">
+  <div class="site-layer-content">
+    <div class="site-layer-header">
+      <span class="site-layer-header-title" id="site-layer-title"></span>
+      <i class="fa fa-close" id="site-layer-close"></i>
+    </div>
+    <div class="site-layer-body" id="site-layer-container">
+      <div class="site-layer-input" id="site-layer-search" style="display: none;">
+        <input type="text">
+        <i class="fa fa-search"></i>
+      </div>
+      <div class="site-layer-reward" id="site-layer-reward" style="display: none;">
+        
+          <div>
+            <img src="/images/wechat.png" alt="WeChat">
+            
+              <p>WeChat</p>
+            
+          </div>
+        
+          <div>
+            <img src="/images/alipay.png" alt="AliPay">
+            
+              <p>AliPay</p>
+            
+          </div>
+        
+      </div>
+      <div id="site-layer-welcome" style="display:none;"></div>
+    </div>
+  </div>
+</div>
+    
+
+<div class="bottom-bar">
+  <div class="bottom-bar-left">
+    <a href="javascript:void(0);" data-enable="false">
+      <i class="fa fa-arrow-left"></i>
+    </a>
+    <a href="/2019/05/26/软件系统分析与设计之五/" data-enable="true">
+      <i class="fa fa-arrow-right"></i>
+    </a>
+  </div>
+  <div class="bottom-bar-right">
+    <a href="javascript:void(0);" data-enable="true" id="site-toc-show-btn">
+      <i class="fa fa-bars"></i>
+    </a>
+    
+      <a href="#site-comment" data-enable="true">
+        <i class="fa fa-commenting"></i>
+      </a>
+    
+    <a href="javascript:void(0);" id="site-toggle-share-btn">
+      <i class="fa fa-share-alt"></i>
+    </a>
+    <a href="javascript:void(0);" id="site-reward">
+      <i class="fa fa-thumbs-up"></i>
+    </a>
+    <a href="javascript:void(0);" id="back-top-btn">
+      <i class="fa fa-chevron-up"></i>
+    </a>
+  </div>
+</div>
+    <div id="share-btn">
+  
+    <a id="share-btn-twitter" href="javascript:void(0);" target="_blank">
+      <i class="fa fa-twitter"></i>
+    </a>
+  
+  
+    <a id="share-btn-facebook" href="javascript:void(0);" target="_blank">
+      <i class="fa fa-facebook"></i>
+    </a>
+  
+  
+    <a id="share-btn-weibo" href="javascript:void(0);" target="_blank">
+      <i class="fa fa-weibo"></i>
+    </a>
+  
+  
+    <a id="share-btn-qq" href="javascript:void(0);" target="_blank">
+      <i class="fa fa-qq"></i>
+    </a>
+  
+  
+    <a id="share-btn-wechat" href="javascript:void(0);" target="_blank">
+      <i class="fa fa-wechat"></i>
+    </a>
+  
+</div>
+  </body>
+</html>
