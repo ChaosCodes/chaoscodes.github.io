@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html>
+  
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="utf-8">
+  <meta name="author" content="Zeng Guangtao">
+  
+  
+  <title>Auto-Scaling in OpenFaas | Chaos Codes</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="OpenFaas,">
+  
+
+  
+  <meta name="description" content="Chaos_Site">
+
+  
+
+  <script src="//cdn.jsdelivr.net/npm/leancloud-storage@3.11.1/dist/av-min.js" async></script>
+
+  
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML" async></script>
+  
+
+  
+    <script src="//unpkg.com/valine/dist/Valine.min.js" async></script>
+  
+
+  <script>
+  // theme-ad's config script
+  // it can be used in every script
+  
+  window.AD_CONFIG = {
+    leancloud: {"appid":"30aez2Xj5kLeavizPUYvJTxY-gzGzoHsz","appkey":"mF5hceF2SeM6mArzNCvH2KfD","comment":true,"count":false},
+    welcome: {"enable":true,"interval":30},
+    start_time: "2018-02-27",
+    passwords: ["efe07af7441da2b69c4a41e42e73be4db47f66010a56900788a458354a7373ec", ],
+    is_post: true,
+    lock: false,
+    author: "Zeng Guangtao",
+    share: {"twitter":true,"facebook":true,"weibo":true,"qq":true,"wechat":true},
+    mathjax: true,
+    page_type: ""
+  };
+</script>
+
+  <script src="/vendor/sha256.min.js"></script>
+<script src="/js/auth.js"></script>
+<script src="/js/index.js"></script>
+<script src="/vendor/qrcode.min.js"></script>
+
+  
+    <link rel="icon" href="/images/favicon.ico">
+    <link rel="apple-touch-icon" href="/images/touch-icon.png">
+  
+
+  <link href="//netdna.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+
+  <link rel="stylesheet" href="/css/index.css">
+<link rel="stylesheet" href="/styles/components/highlight/highlight.css">
+
+  
+
+  
+
+
+
+</head>
+  <body>
+    <header class="site-header">
+  <div class="site-header-brand">
+    
+      <span class="site-header-brand-title">
+        <a href="/">Chaos</a>
+      </span>
+    
+    
+      <span class="site-header-brand-motto"> | Something for blogs</span>
+    
+  </div>
+  <div class="site-header-right">
+    <nav class="site-header-navigation">
+      
+        <a href="/" target="_self">首页</a>
+      
+        <a href="/archives/" target="_self">归档</a>
+      
+    </nav>
+    <div class="site-header-btn">
+      
+        <a href="https://github.com/ChaosCodes/" target="_blank">
+          <i class="fa fa-github-alt"></i>
+        </a>
+      
+      <a href="javascript:void(0);" id="site-search">
+        <i class="fa fa-search"></i>
+      </a>
+    </div>
+  </div>
+</header>
+<div id="site-process"></div>
+    <main>
+      
+  <div class="passage">
+  <div class="passage-meta">
+    <span>
+      <i class="fa fa-calendar"></i>2019-06-15
+    </span>
+    
+    
+      <span>
+        | <i class="fa fa-unlock-alt"></i>UNLOCK
+      </span>
+    
+  </div>
+  <h1 class="passage-title">
+    Auto-Scaling in OpenFaas
+  </h1>
+  
+  <article class="passage-article">
+    <h2 id="Auto-Scaling-in-OpenFaas"><a href="#Auto-Scaling-in-OpenFaas" class="headerlink" title="Auto-Scaling in OpenFaas"></a>Auto-Scaling in OpenFaas</h2><p>In this post, what I am focusing on is auto-scaling in OpenFaas, which allows a function to scale up or down depending on demand represented by different metrics. </p>
+<p>But, before taking about auto-scaling,  let’s start with the design and architecture of OpenFaas.</p>
+<h3 id="Design"><a href="#Design" class="headerlink" title="Design"></a>Design</h3><p>Here I present the conceptual architecture of OpenFaas. However, the orchestration provider I use is Swarm rather than Kubernetes. According to the image, my OpenFaas consists of four parts: <strong>Gateway</strong>, <strong>Watchdog</strong>, <strong>Prometheus</strong> and <strong>Swarm</strong> and I will make an introdution for them below.</p>
+<p><img src="/Users/zengguangtao/Desktop/faas.jpeg" alt="faas"></p>
+<h4 id="Gateway"><a href="#Gateway" class="headerlink" title="Gateway"></a>Gateway</h4><p>Gateway provides an external route into your functions and collects Cloud Native metrics through Prometheus. <strong>In a word, the Gateway, is just a door for user to access to the api function and provide matrics for Prometheus.</strong></p>
+<p><img src="/Users/zengguangtao/Desktop/of-conceptual-operator.png" alt="of-conceptual-operator"></p>
+<p> In addition, it offer <em>a build-in UI portal</em> for user to deploy function either by you own or from the Function Store. What’s more, the connection between <strong>Gateway</strong> and <strong>Prometheus</strong> is the key to make auto-scaling, which means that can make auto-scaling via AlertManager and Prometheus.</p>
+<h4 id="WatchDog"><a href="#WatchDog" class="headerlink" title="WatchDog"></a>WatchDog</h4><p>According to the official document, the watchdog provides an unmanaged and generic interface between the outside world and your function. Its job is to marshal a HTTP request accepted on the API Gateway and to invoke your chosen application. The diagram below indicates how Watchdog works as a web server.</p>
+<p><img src="/Users/zengguangtao/Desktop/68747470733a2f2f7062732e7477696d672e636f6d2f6d656469612f4447536344626c554941416f34482d2e6a70673a6c61726765.jpeg" alt="68747470733a2f2f7062732e7477696d672e636f6d2f6d656469612f4447536344626c554941416f34482d2e6a70673a6c61726765"></p>
+<p>You can consider Watchdog as a entry for your fuction that is deloyed in docker.</p>
+<h4 id="Prometheus"><a href="#Prometheus" class="headerlink" title="Prometheus"></a>Prometheus</h4><p><a href="https://github.com/prometheus" target="_blank" rel="noopener">Prometheus</a> is an open-source systems monitoring and alerting toolkit originally built at SoundCloud. In OpenFaas, Prometheus help Gateway <em>collect Cloud Native metrics</em> and <em>fire an alert to the API Gateway</em> to inform Gateway to scale.</p>
+<p><img src="/Users/zengguangtao/Desktop/prometheus.png" alt="prometheus"></p>
+<h4 id="Swarm"><a href="#Swarm" class="headerlink" title="Swarm"></a>Swarm</h4><p>A swarm is a group of machines that are running Docker and joined into a cluster. In OpenFass, swarm is used to create cluster in which you can easily to set up your docker function in a short period of time. Read <a href="https://docs.docker.com/engine/swarm/" target="_blank" rel="noopener">Swarm</a> for more details.</p>
+<p><img src="/Users/zengguangtao/Desktop/swarm.png" alt="swarm"></p>
+<h3 id="How-OpenFaas-Scale"><a href="#How-OpenFaas-Scale" class="headerlink" title="How OpenFaas Scale"></a>How OpenFaas Scale</h3><p>The gateway will scale functions according to demand by altering the service replica count in the Docker Swarm or Kubernetes API. Custom alerts generated by AlertManager are received on the <code>/system/alert</code>endpoint.</p>
+<p>Let’s figure out the mechanism why OpenFaas can make auto-scaling.</p>
+<p>First, in auto-scaling, prometheus plays a important role. Check the config of prometheus first.</p>
+<h5 id="alert-rules-yml"><a href="#alert-rules-yml" class="headerlink" title="alert.rules.yml"></a>alert.rules.yml</h5><figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">groups:</span></span><br><span class="line"><span class="attr">- name:</span> <span class="string">prometheus/alert.rules</span></span><br><span class="line"><span class="attr">  rules:</span></span><br><span class="line"><span class="attr">  - alert:</span> <span class="string">service_down</span></span><br><span class="line"><span class="attr">    expr:</span> <span class="string">up</span> <span class="string">==</span> <span class="number">0</span></span><br><span class="line"><span class="attr">  - alert:</span> <span class="string">APIHighInvocationRate</span></span><br><span class="line"><span class="attr">    expr:</span> <span class="string">sum(rate(gateway_function_invocation_total&#123;code="200"&#125;[10s]))</span> <span class="string">BY</span> <span class="string">(function_name)</span> <span class="string">&gt; 5</span></span><br><span class="line"><span class="string"></span><span class="attr">    for:</span> <span class="number">5</span><span class="string">s</span></span><br><span class="line"><span class="attr">    labels:</span></span><br><span class="line"><span class="attr">      service:</span> <span class="string">gateway</span></span><br><span class="line"><span class="attr">      severity:</span> <span class="string">major</span></span><br><span class="line"><span class="attr">    annotations:</span></span><br><span class="line"><span class="attr">      description:</span> <span class="string">High</span> <span class="string">invocation</span> <span class="string">total</span> <span class="string">on</span> <span class="string">&#123;&#123;</span> <span class="string">$labels.function_name</span> <span class="string">&#125;&#125;</span></span><br><span class="line"><span class="attr">      summary:</span> <span class="string">High</span> <span class="string">invocation</span> <span class="string">total</span> <span class="string">on</span> <span class="string">&#123;&#123;</span> <span class="string">$labels.function_name</span> <span class="string">&#125;&#125;</span></span><br></pre></td></tr></table></figure>
+<p>In the <em>yml</em> file, we can know that there is an alert named APIHighInvocationRate, which will sent a file alert to API Gateway when <code>sum(rate(gateway_function_invocation_total{code=&quot;200&quot;}[10s])) BY (function_name) &gt; 5</code>(whether a function was called for at least 5 times in last 10 seconds). But only the alert lasts for 5s, can Gateway scale the function.</p>
+<p>Continuing to focus on the config of alertmanager.</p>
+<h5 id="alertmanager-yml"><a href="#alertmanager-yml" class="headerlink" title="alertmanager.yml"></a>alertmanager.yml</h5><figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">route:</span></span><br><span class="line"><span class="attr">  group_by:</span> <span class="string">['alertname',</span> <span class="string">'cluster'</span><span class="string">,</span> <span class="string">'service'</span><span class="string">]</span></span><br><span class="line"><span class="attr">  group_wait:</span> <span class="number">5</span><span class="string">s</span></span><br><span class="line"><span class="attr">  group_interval:</span> <span class="number">10</span><span class="string">s</span></span><br><span class="line"><span class="attr">  repeat_interval:</span> <span class="number">30</span><span class="string">s</span></span><br><span class="line"><span class="attr">  receiver:</span> <span class="string">scale-up</span></span><br><span class="line"><span class="attr">  routes:</span></span><br><span class="line"><span class="attr">  - match:</span></span><br><span class="line"><span class="attr">      service:</span> <span class="string">gateway</span></span><br><span class="line"><span class="attr">      receiver:</span> <span class="string">scale-up</span></span><br><span class="line"><span class="attr">      severity:</span> <span class="string">major</span></span><br><span class="line"><span class="attr">inhibit_rules:</span></span><br><span class="line"><span class="attr">- source_match:</span></span><br><span class="line"><span class="attr">    severity:</span> <span class="string">'critical'</span></span><br><span class="line"><span class="attr">  target_match:</span></span><br><span class="line"><span class="attr">    severity:</span> <span class="string">'warning'</span></span><br><span class="line"><span class="attr">  equal:</span> <span class="string">['alertname',</span> <span class="string">'cluster'</span><span class="string">,</span> <span class="string">'service'</span><span class="string">]</span></span><br><span class="line"><span class="attr">receivers:</span></span><br><span class="line"><span class="attr">- name:</span> <span class="string">'scale-up'</span></span><br><span class="line"><span class="attr">  webhook_configs:</span></span><br><span class="line"><span class="attr">    - url:</span> <span class="attr">http://gateway:8080/system/alert</span></span><br><span class="line"><span class="attr">      send_resolved:</span> <span class="literal">true</span></span><br><span class="line"><span class="attr">      http_config:</span></span><br><span class="line"><span class="attr">            basic_auth:</span></span><br><span class="line"><span class="attr">              username:</span> <span class="string">admin</span></span><br><span class="line"><span class="attr">              password_file:</span> <span class="string">/run/secrets/basic-auth-password</span></span><br></pre></td></tr></table></figure>
+<p>Yep! We find the reason why OpenFaas can auto scale the function. Prometheus will check the number each function calls intermittently. When it find that APIHighInvocationRate appear and last for 5s, it will alert and send a command to <code>http://gateway:8080/system/alert</code> to scale up.</p>
+<p>Curiously, I trun to the <code>system/alert</code> api interface and show the core code below. You can get more detail in <a href="https://github.com/openfaas/faas/blob/master/gateway/handlers/alerthandler.go" target="_blank" rel="noopener">alerthandler</a>.</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// MakeAlertHandler handles alerts from Prometheus Alertmanager</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">MakeAlertHandler</span><span class="params">(service scaling.ServiceQuery)</span> <span class="title">http</span>.<span class="title">HandlerFunc</span></span> &#123;</span><br><span class="line">	<span class="keyword">return</span> <span class="function"><span class="keyword">func</span><span class="params">(w http.ResponseWriter, r *http.Request)</span></span> &#123;</span><br><span class="line"></span><br><span class="line">		log.Println(<span class="string">"Alert received."</span>)</span><br><span class="line"></span><br><span class="line">		body, readErr := ioutil.ReadAll(r.Body)</span><br><span class="line"></span><br><span class="line">		log.Println(<span class="keyword">string</span>(body))</span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> readErr != <span class="literal">nil</span> &#123;</span><br><span class="line">			w.WriteHeader(http.StatusBadRequest)</span><br><span class="line">			w.Write([]<span class="keyword">byte</span>(<span class="string">"Unable to read alert."</span>))</span><br><span class="line"></span><br><span class="line">			log.Println(readErr)</span><br><span class="line">			<span class="keyword">return</span></span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">var</span> req requests.PrometheusAlert</span><br><span class="line">		err := json.Unmarshal(body, &amp;req)</span><br><span class="line">		<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">			w.WriteHeader(http.StatusBadRequest)</span><br><span class="line">			w.Write([]<span class="keyword">byte</span>(<span class="string">"Unable to parse alert, bad format."</span>))</span><br><span class="line">			log.Println(err)</span><br><span class="line">			<span class="keyword">return</span></span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		errors := handleAlerts(&amp;req, service)</span><br><span class="line">		<span class="keyword">if</span> <span class="built_in">len</span>(errors) &gt; <span class="number">0</span> &#123;</span><br><span class="line">			log.Println(errors)</span><br><span class="line">			<span class="keyword">var</span> errorOutput <span class="keyword">string</span></span><br><span class="line">			<span class="keyword">for</span> d, err := <span class="keyword">range</span> errors &#123;</span><br><span class="line">				errorOutput += fmt.Sprintf(<span class="string">"[%d] %s\n"</span>, d, err)</span><br><span class="line">			&#125;</span><br><span class="line">			w.WriteHeader(http.StatusInternalServerError)</span><br><span class="line">			w.Write([]<span class="keyword">byte</span>(errorOutput))</span><br><span class="line">			<span class="keyword">return</span></span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		w.WriteHeader(http.StatusOK)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">handleAlerts</span><span class="params">(req *requests.PrometheusAlert, service scaling.ServiceQuery)</span> []<span class="title">error</span></span> &#123;</span><br><span class="line">	<span class="keyword">var</span> errors []error</span><br><span class="line">	<span class="keyword">for</span> _, alert := <span class="keyword">range</span> req.Alerts &#123;</span><br><span class="line">		<span class="keyword">if</span> err := scaleService(alert, service); err != <span class="literal">nil</span> &#123;</span><br><span class="line">			log.Println(err)</span><br><span class="line">			errors = <span class="built_in">append</span>(errors, err)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> errors</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>In the api, Gateway will get the information from AlertManager, decide what replica count to set and scale.</p>
+<h3 id="Monitor-Auto-scaling-in-Open-Faas-UI"><a href="#Monitor-Auto-scaling-in-Open-Faas-UI" class="headerlink" title="Monitor Auto-scaling in Open-Faas UI"></a>Monitor Auto-scaling in Open-Faas UI</h3><blockquote>
+<p>We will use <strong><em>play_with_docker</em></strong> to implement the tutorial.</p>
+</blockquote>
+<p>First, deploy the <code>echo-fn</code> function in OpenFaas and set the scale-config.</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span> git clone https://github.com/alexellis/echo-fn \</span><br><span class="line"> &amp;&amp; cd echo-fn \</span><br><span class="line"> &amp;&amp; faas-cli template store pull golang-http \</span><br><span class="line"> &amp;&amp; faas-cli deploy \</span><br><span class="line">  --label com.openfaas.scale.max=10 \</span><br><span class="line">  --label com.openfaas.scale.min=1</span><br></pre></td></tr></table></figure>
+<p>Then, you can get a function echo-fn in OpenFaas UI. </p>
+<p><img src="/Users/zengguangtao/Desktop/UI.png" alt="UI"></p>
+<p>Get into the alerts UI portal in <a href="192.168.0.12:9090/alerts" target="_blank" rel="noopener">192.168.0.12:9090/alerts</a>. However, there is no alert now.</p>
+<p><img src="/Users/zengguangtao/Desktop/alert.png" alt="alert"></p>
+<p>Use shell command to invoke the <code>go-echo</code> function over and over until seeing the replica count scale. </p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span> for i in &#123;0..10000&#125;;</span><br><span class="line">do</span><br><span class="line">   echo -n "Post $i" | faas-cli invoke go-echo &amp;&amp; echo;</span><br><span class="line">done;</span><br></pre></td></tr></table></figure>
+<p>After run the command and  <code>go-echo</code> is invoked again and again, AlertManager will find that <code>sum(rate(gateway_function_invocation_total{code=&quot;200&quot;}[10s])) BY (function_name) &gt; 5</code>  becomes <code>True</code>. Than it will be in <strong>PENDING</strong> state and continue to monitor the alert for 5s.</p>
+<p><img src="/Users/zengguangtao/Desktop/pending.png" alt="pending"></p>
+<p>If the alert lasts for 5s, AlertManager will switch to <strong>FIRING</strong> state and sent to <code>/system/alert</code> endpoint to scale the function.</p>
+<p><img src="/Users/zengguangtao/Desktop/firing.png" alt="firing"></p>
+<p>After a few second, you can find the replica number wil be scaled to 5.</p>
+<p><img src="/Users/zengguangtao/Desktop/scale-replica.png" alt="scale-replica"></p>
+<p>When you stop the command, Gateway will figure out that some replica get to be idle and kill them. After that, the replica number will down back to 1.</p>
+
+  </article>
+  
+    <aside class="passage-copyright">
+      <div>本文作者: 曾广韬</div>
+      
+        <div>
+          原文链接: 
+          <a href target="_blank">https://ChaosCodes.github.io/2019/06/15/Auto-Scaling-in-OpenFaas/</a>
+        </div>
+      
+      <div>
+        版权声明: 本博客所有文章除特别声明外, 均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议. 转载请注明出处!
+      </div>
+    </aside>
+  
+  <aside class="table-content" id="site-toc">
+  <div class="table-content-title">
+    <i class="fa fa-arrow-right fa-lg" id="site-toc-hide-btn"></i>
+    <span>目录</span>
+  </div>
+  <div class="table-content-main">
+    <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Auto-Scaling-in-OpenFaas"><span class="toc-text">Auto-Scaling in OpenFaas</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Design"><span class="toc-text">Design</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Gateway"><span class="toc-text">Gateway</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#WatchDog"><span class="toc-text">WatchDog</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Prometheus"><span class="toc-text">Prometheus</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Swarm"><span class="toc-text">Swarm</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#How-OpenFaas-Scale"><span class="toc-text">How OpenFaas Scale</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#alert-rules-yml"><span class="toc-text">alert.rules.yml</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#alertmanager-yml"><span class="toc-text">alertmanager.yml</span></a></li></ol></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Monitor-Auto-scaling-in-Open-Faas-UI"><span class="toc-text">Monitor Auto-scaling in Open-Faas UI</span></a></li></ol>
+  </div>
+</aside>
+  
+    <div class="passage-tags">
+     
+      <a href="/tags/OpenFaas/"><i class="fa fa-tags"></i>OpenFaas</a>
+    
+    </div>
+  
+</div>
+
+    </main>
+    
+      <div class="site-comment-contanier">
+  <p id="site-comment-info">
+    <i class="fa fa-spinner fa-spin"></i> 评论加载中
+  </p>
+  <div id="site-comment">
+  </div>
+</div>
+    
+    <div class="site-footer-wrapper">
+  <footer class="site-footer">
+    
+      <div class="site-footer-col">
+        <h5 class="site-footer-title">相关推荐学习网站</h5>
+        
+          <span class="site-footer-item">
+            <a href="https://www.coursera.org/" target="_blank">couresa</a>
+          </span>
+        
+      </div>
+    
+    <!-- <div class="site-footer-info">
+      <i class="fa fa-clock-o"></i> 本站已稳定运行<span id="site-time"></span>
+    </div> -->
+    
+    
+      <div class="site-footer-info">
+        <i class="fa fa-at"></i> Email: kids937@foxmail.co
+      </div>
+    
+    <div class="site-footer-info">
+      <i class="fa fa-copyright"></i> 
+      2019 <a href="https://github.com/dongyuanxin/theme-ad/" target="_blank">Theme-AD</a>.
+      Created by <a href="https:/godbmw.com/" target="_blank">GodBMW</a>.
+      All rights reserved.
+    </div>
+  </footer>
+</div>
+    <div id="site-layer" style="display:none;">
+  <div class="site-layer-content">
+    <div class="site-layer-header">
+      <span class="site-layer-header-title" id="site-layer-title"></span>
+      <i class="fa fa-close" id="site-layer-close"></i>
+    </div>
+    <div class="site-layer-body" id="site-layer-container">
+      <div class="site-layer-input" id="site-layer-search" style="display: none;">
+        <input type="text">
+        <i class="fa fa-search"></i>
+      </div>
+      <div class="site-layer-reward" id="site-layer-reward" style="display: none;">
+        
+          <div>
+            <img src="/images/wechat.png" alt="WeChat">
+            
+              <p>WeChat</p>
+            
+          </div>
+        
+          <div>
+            <img src="/images/alipay.png" alt="AliPay">
+            
+              <p>AliPay</p>
+            
+          </div>
+        
+      </div>
+      <div id="site-layer-welcome" style="display:none;"></div>
+    </div>
+  </div>
+</div>
+    
+
+<div class="bottom-bar">
+  <div class="bottom-bar-left">
+    <a href="javascript:void(0);" data-enable="false">
+      <i class="fa fa-arrow-left"></i>
+    </a>
+    <a href="/2019/06/11/My-first-try-in-OpenFass/" data-enable="true">
+      <i class="fa fa-arrow-right"></i>
+    </a>
+  </div>
+  <div class="bottom-bar-right">
+    <a href="javascript:void(0);" data-enable="true" id="site-toc-show-btn">
+      <i class="fa fa-bars"></i>
+    </a>
+    
+      <a href="#site-comment" data-enable="true">
+        <i class="fa fa-commenting"></i>
+      </a>
+    
+    <a href="javascript:void(0);" id="site-toggle-share-btn">
+      <i class="fa fa-share-alt"></i>
+    </a>
+    <a href="javascript:void(0);" id="site-reward">
+      <i class="fa fa-thumbs-up"></i>
+    </a>
+    <a href="javascript:void(0);" id="back-top-btn">
+      <i class="fa fa-chevron-up"></i>
+    </a>
+  </div>
+</div>
+    <div id="share-btn">
+  
+    <a id="share-btn-twitter" href="javascript:void(0);" target="_blank">
+      <i class="fa fa-twitter"></i>
+    </a>
+  
+  
+    <a id="share-btn-facebook" href="javascript:void(0);" target="_blank">
+      <i class="fa fa-facebook"></i>
+    </a>
+  
+  
+    <a id="share-btn-weibo" href="javascript:void(0);" target="_blank">
+      <i class="fa fa-weibo"></i>
+    </a>
+  
+  
+    <a id="share-btn-qq" href="javascript:void(0);" target="_blank">
+      <i class="fa fa-qq"></i>
+    </a>
+  
+  
+    <a id="share-btn-wechat" href="javascript:void(0);" target="_blank">
+      <i class="fa fa-wechat"></i>
+    </a>
+  
+</div>
+  </body>
+</html>
