@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html>
+  
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="utf-8">
+  <meta name="author" content="Zeng Guangtao">
+  
+  
+  <title>Deploy a python demo in OpenFaas | Chaos Codes</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="OpenFaas,">
+  
+
+  
+  <meta name="description" content="Chaos_Site">
+
+  
+
+  <script src="//cdn.jsdelivr.net/npm/leancloud-storage@3.11.1/dist/av-min.js" async></script>
+
+  
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML" async></script>
+  
+
+  
+    <script src="//unpkg.com/valine/dist/Valine.min.js" async></script>
+  
+
+  <script>
+  // theme-ad's config script
+  // it can be used in every script
+  
+  window.AD_CONFIG = {
+    leancloud: {"appid":"30aez2Xj5kLeavizPUYvJTxY-gzGzoHsz","appkey":"mF5hceF2SeM6mArzNCvH2KfD","comment":true,"count":false},
+    welcome: {"enable":true,"interval":30},
+    start_time: "2018-02-27",
+    passwords: ["efe07af7441da2b69c4a41e42e73be4db47f66010a56900788a458354a7373ec", ],
+    is_post: true,
+    lock: false,
+    author: "Zeng Guangtao",
+    share: {"twitter":true,"facebook":true,"weibo":true,"qq":true,"wechat":true},
+    mathjax: true,
+    page_type: ""
+  };
+</script>
+
+  <script src="/vendor/sha256.min.js"></script>
+<script src="/js/auth.js"></script>
+<script src="/js/index.js"></script>
+<script src="/vendor/qrcode.min.js"></script>
+
+  
+    <link rel="icon" href="/images/favicon.ico">
+    <link rel="apple-touch-icon" href="/images/touch-icon.png">
+  
+
+  <link href="//netdna.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+
+  <link rel="stylesheet" href="/css/index.css">
+<link rel="stylesheet" href="/styles/components/highlight/highlight.css">
+
+  
+
+  
+
+
+
+</head>
+  <body>
+    <header class="site-header">
+  <div class="site-header-brand">
+    
+      <span class="site-header-brand-title">
+        <a href="/">Chaos</a>
+      </span>
+    
+    
+      <span class="site-header-brand-motto"> | Something for blogs</span>
+    
+  </div>
+  <div class="site-header-right">
+    <nav class="site-header-navigation">
+      
+        <a href="/" target="_self">首页</a>
+      
+        <a href="/archives/" target="_self">归档</a>
+      
+    </nav>
+    <div class="site-header-btn">
+      
+        <a href="https://github.com/ChaosCodes/" target="_blank">
+          <i class="fa fa-github-alt"></i>
+        </a>
+      
+      <a href="javascript:void(0);" id="site-search">
+        <i class="fa fa-search"></i>
+      </a>
+    </div>
+  </div>
+</header>
+<div id="site-process"></div>
+    <main>
+      
+  <div class="passage">
+  <div class="passage-meta">
+    <span>
+      <i class="fa fa-calendar"></i>2019-06-23
+    </span>
+    
+    
+      <span>
+        | <i class="fa fa-unlock-alt"></i>UNLOCK
+      </span>
+    
+  </div>
+  <h1 class="passage-title">
+    Deploy a python demo in OpenFaas
+  </h1>
+  
+  <article class="passage-article">
+    <h2 id="Deploy-a-python-demo-in-OpenFaas"><a href="#Deploy-a-python-demo-in-OpenFaas" class="headerlink" title="Deploy a python demo in OpenFaas"></a>Deploy a python demo in OpenFaas</h2><blockquote>
+<p>After a try in OpenFaas, here I make a effort to deploy my own function via OpenFaas. </p>
+</blockquote>
+<p>A few days ago, I play Chinese string up puzzle in QQ with a robot named xiaobing. An interesting thought came to mind that whether I could write such a function service which can help me figure the next idiom in the puzzle. So I get to write my python function.</p>
+<h3 id="Collect-and-Pre-processing"><a href="#Collect-and-Pre-processing" class="headerlink" title="Collect and Pre-processing"></a>Collect and Pre-processing</h3><p>First, I found some words in <a href="https://github.com/pwxcoo/chinese-xinhua/blob/master/data/idiom.json" target="_blank" rel="noopener">Github repo</a>. And I make pre-process on the data to help easy get the next idoim.</p>
+<h5 id="Pre-process-py"><a href="#Pre-process-py" class="headerlink" title="Pre-process.py"></a>Pre-process.py</h5><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">with</span> open(<span class="string">"idioms.json"</span>,<span class="string">"r"</span>) <span class="keyword">as</span> f:</span><br><span class="line">  words = json.load(f)</span><br><span class="line"><span class="comment"># use dict to help find the next idoim quickly</span></span><br><span class="line">wdict = &#123;&#125;</span><br><span class="line"><span class="keyword">for</span> word <span class="keyword">in</span> words:</span><br><span class="line">  l = wdict.get(word[<span class="number">0</span>],[])</span><br><span class="line">  wdict = l.append(word)</span><br><span class="line"><span class="keyword">with</span> open(<span class="string">'idioms_dict.json'</span>,<span class="string">'w'</span>) <span class="keyword">as</span> f:</span><br><span class="line">  json.dump(wdict, f, ensure_ascii=<span class="literal">False</span>)</span><br></pre></td></tr></table></figure>
+<p>Then you could find that the pre-processed data. You can find the idoim with its first character.</p>
+<p>#####idioms_dict.json</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    <span class="attr">"阿"</span>: [</span><br><span class="line">        <span class="string">"阿鼻地狱"</span>,</span><br><span class="line">        <span class="string">"阿党比周"</span>,</span><br><span class="line">        <span class="string">"阿党相为"</span></span><br><span class="line">    ],</span><br><span class="line">    <span class="attr">"哀"</span>: [</span><br><span class="line">        <span class="string">"哀哀欲绝"</span>,</span><br><span class="line">        <span class="string">"哀思如潮"</span>,</span><br><span class="line">        <span class="string">"哀天叫地"</span>,</span><br><span class="line">        <span class="string">"哀痛欲绝"</span></span><br><span class="line">    ],</span><br><span class="line">    <span class="attr">"唉"</span>: [</span><br><span class="line">        <span class="string">"唉声叹气"</span></span><br><span class="line">    ],</span><br><span class="line">    <span class="attr">"挨"</span>: [</span><br><span class="line">        <span class="string">"挨冻受饿"</span>,</span><br><span class="line">        <span class="string">"挨风缉缝"</span>,</span><br><span class="line">        <span class="string">"挨三顶五"</span>,</span><br><span class="line">        <span class="string">"挨山塞海"</span></span><br><span class="line">    ],</span><br><span class="line">    <span class="attr">"捱"</span>: [</span><br><span class="line">        <span class="string">"捱风缉缝"</span>,</span><br><span class="line">        <span class="string">"捱三顶四"</span>,</span><br><span class="line">        <span class="string">"捱三顶五"</span></span><br><span class="line">    ],</span><br><span class="line">    <span class="attr">"嗳"</span>: [</span><br><span class="line">        <span class="string">"嗳声叹气"</span></span><br><span class="line">    ],</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="Write-the-python-function"><a href="#Write-the-python-function" class="headerlink" title="Write the python function"></a>Write the python function</h3><p> To implement the Chinese string up puzzle, I write a little demo.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> json</span><br><span class="line"><span class="keyword">import</span> random</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">handle</span><span class="params">(req)</span>:</span></span><br><span class="line">    <span class="keyword">with</span> open(<span class="string">'./function/idioms_dict.json'</span>, <span class="string">'r'</span>) <span class="keyword">as</span> f:</span><br><span class="line">        words = json.load(f)</span><br><span class="line">    <span class="keyword">try</span>:</span><br><span class="line">        req = str(req).strip()</span><br><span class="line">        <span class="keyword">if</span> req <span class="keyword">not</span> <span class="keyword">in</span> words[req[<span class="number">0</span>]]:</span><br><span class="line">            <span class="keyword">return</span> <span class="string">'the idiom not exist'</span></span><br><span class="line">        next_words = words.get(req[<span class="number">-1</span>], [])</span><br><span class="line">        length = len(next_words)</span><br><span class="line">        <span class="keyword">if</span> length == <span class="number">0</span>:</span><br><span class="line">            <span class="keyword">return</span> <span class="string">"can't find the next idion"</span></span><br><span class="line">        word = next_words[random.randint(<span class="number">0</span>, length - <span class="number">1</span>)]</span><br><span class="line">        <span class="keyword">return</span> word</span><br><span class="line">    <span class="keyword">except</span>:</span><br><span class="line">        <span class="keyword">return</span> <span class="string">'bad parameter'</span></span><br></pre></td></tr></table></figure>
+<h5 id="Notice"><a href="#Notice" class="headerlink" title="Notice:"></a>Notice:</h5><blockquote>
+<p>Here why I use the path <code>./function/idioms_dict.json</code> is that in OpenFaas, after you deploy your function, the files in the handler folder will be placed in <code>./function</code>. So I need to get access to <code>./function</code> to get my <code>idioms_dict.json</code>.</p>
+</blockquote>
+<h3 id="Deploy-the-python-function"><a href="#Deploy-the-python-function" class="headerlink" title="Deploy the python function"></a>Deploy the python function</h3><p>After working with the function, I modify the <code>yml</code> file.</p>
+<h5 id="idoim-follow-yml"><a href="#idoim-follow-yml" class="headerlink" title="idoim-follow.yml"></a>idoim-follow.yml</h5><figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">version:</span> <span class="number">1.0</span></span><br><span class="line"><span class="attr">provider:</span></span><br><span class="line"><span class="attr">  name:</span> <span class="string">openfaas</span></span><br><span class="line"><span class="attr">  gateway:</span> <span class="attr">http://127.0.0.1:8080</span></span><br><span class="line"><span class="attr">functions:</span></span><br><span class="line"><span class="attr">  idoim-follow:</span></span><br><span class="line"><span class="attr">    lang:</span> <span class="string">python3</span></span><br><span class="line"><span class="attr">    handler:</span> <span class="string">./idoim-follow</span></span><br><span class="line"><span class="attr">    image:</span> <span class="string">kids937/idoim-follow:latest</span></span><br></pre></td></tr></table></figure>
+<p>Now all work about coding have been finished yet. It’s so easy, isn’t it? See more detail in <a href="https://github.com/ChaosCodes/idoim-follow-in-openfaas" target="_blank" rel="noopener">my GitHub repo</a>.</p>
+<p>Let’s start to make it deploy.</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span> faas-cli build -f idoim-follow.yml &amp;&amp;\</span><br><span class="line">  faas-cli deploy -f idoim-follow.yml</span><br></pre></td></tr></table></figure>
+<p>Wait a second to build the image, and you can see a function deployed in the OpenFaas Portal.</p>
+<p><img src="deploy-idoim-follow.png" alt="deploy-idoim-follow"></p>
+<h3 id="Play-with-my-own-function"><a href="#Play-with-my-own-function" class="headerlink" title="Play with my own function"></a>Play with my own function</h3><p>Try to check whether the function work well.</p>
+<p><img src="check-idoim-follow.png" alt="check-idoim-follow"></p>
+<p>Amazing！Now I can get the next idoim just by typing the question idoim and invoking the function~</p>
+<p>Moreover, I’m going to play Chinese string up puzzle with xiaobing again, and I’m determined to defeat her this time. LOL.</p>
+
+  </article>
+  
+    <aside class="passage-copyright">
+      <div>本文作者: 曾广韬</div>
+      
+        <div>
+          原文链接: 
+          <a href target="_blank">https://ChaosCodes.github.io/2019/06/23/Deploy-a-python-demo-in-OpenFaas/</a>
+        </div>
+      
+      <div>
+        版权声明: 本博客所有文章除特别声明外, 均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议. 转载请注明出处!
+      </div>
+    </aside>
+  
+  <aside class="table-content" id="site-toc">
+  <div class="table-content-title">
+    <i class="fa fa-arrow-right fa-lg" id="site-toc-hide-btn"></i>
+    <span>目录</span>
+  </div>
+  <div class="table-content-main">
+    <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Deploy-a-python-demo-in-OpenFaas"><span class="toc-text">Deploy a python demo in OpenFaas</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Collect-and-Pre-processing"><span class="toc-text">Collect and Pre-processing</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#Pre-process-py"><span class="toc-text">Pre-process.py</span></a></li></ol></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Write-the-python-function"><span class="toc-text">Write the python function</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#Notice"><span class="toc-text">Notice:</span></a></li></ol></li></ol><li class="toc-item toc-level-3"><a class="toc-link" href="#Deploy-the-python-function"><span class="toc-text">Deploy the python function</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#idoim-follow-yml"><span class="toc-text">idoim-follow.yml</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Play-with-my-own-function"><span class="toc-text">Play with my own function</span></a></li>
+  </div>
+</aside>
+  
+    <div class="passage-tags">
+     
+      <a href="/tags/OpenFaas/"><i class="fa fa-tags"></i>OpenFaas</a>
+    
+    </div>
+  
+</div>
+
+    </main>
+    
+      <div class="site-comment-contanier">
+  <p id="site-comment-info">
+    <i class="fa fa-spinner fa-spin"></i> 评论加载中
+  </p>
+  <div id="site-comment">
+  </div>
+</div>
+    
+    <div class="site-footer-wrapper">
+  <footer class="site-footer">
+    
+      <div class="site-footer-col">
+        <h5 class="site-footer-title">相关推荐学习网站</h5>
+        
+          <span class="site-footer-item">
+            <a href="https://www.coursera.org/" target="_blank">couresa</a>
+          </span>
+        
+      </div>
+    
+    <!-- <div class="site-footer-info">
+      <i class="fa fa-clock-o"></i> 本站已稳定运行<span id="site-time"></span>
+    </div> -->
+    
+    
+      <div class="site-footer-info">
+        <i class="fa fa-at"></i> Email: kids937@foxmail.co
+      </div>
+    
+    <div class="site-footer-info">
+      <i class="fa fa-copyright"></i> 
+      2019 <a href="https://github.com/dongyuanxin/theme-ad/" target="_blank">Theme-AD</a>.
+      Created by <a href="https:/godbmw.com/" target="_blank">GodBMW</a>.
+      All rights reserved.
+    </div>
+  </footer>
+</div>
+    <div id="site-layer" style="display:none;">
+  <div class="site-layer-content">
+    <div class="site-layer-header">
+      <span class="site-layer-header-title" id="site-layer-title"></span>
+      <i class="fa fa-close" id="site-layer-close"></i>
+    </div>
+    <div class="site-layer-body" id="site-layer-container">
+      <div class="site-layer-input" id="site-layer-search" style="display: none;">
+        <input type="text">
+        <i class="fa fa-search"></i>
+      </div>
+      <div class="site-layer-reward" id="site-layer-reward" style="display: none;">
+        
+          <div>
+            <img src="/images/wechat.png" alt="WeChat">
+            
+              <p>WeChat</p>
+            
+          </div>
+        
+          <div>
+            <img src="/images/alipay.png" alt="AliPay">
+            
+              <p>AliPay</p>
+            
+          </div>
+        
+      </div>
+      <div id="site-layer-welcome" style="display:none;"></div>
+    </div>
+  </div>
+</div>
+    
+
+<div class="bottom-bar">
+  <div class="bottom-bar-left">
+    <a href="javascript:void(0);" data-enable="false">
+      <i class="fa fa-arrow-left"></i>
+    </a>
+    <a href="/2019/06/15/Auto-Scaling-in-OpenFaas/" data-enable="true">
+      <i class="fa fa-arrow-right"></i>
+    </a>
+  </div>
+  <div class="bottom-bar-right">
+    <a href="javascript:void(0);" data-enable="true" id="site-toc-show-btn">
+      <i class="fa fa-bars"></i>
+    </a>
+    
+      <a href="#site-comment" data-enable="true">
+        <i class="fa fa-commenting"></i>
+      </a>
+    
+    <a href="javascript:void(0);" id="site-toggle-share-btn">
+      <i class="fa fa-share-alt"></i>
+    </a>
+    <a href="javascript:void(0);" id="site-reward">
+      <i class="fa fa-thumbs-up"></i>
+    </a>
+    <a href="javascript:void(0);" id="back-top-btn">
+      <i class="fa fa-chevron-up"></i>
+    </a>
+  </div>
+</div>
+    <div id="share-btn">
+  
+    <a id="share-btn-twitter" href="javascript:void(0);" target="_blank">
+      <i class="fa fa-twitter"></i>
+    </a>
+  
+  
+    <a id="share-btn-facebook" href="javascript:void(0);" target="_blank">
+      <i class="fa fa-facebook"></i>
+    </a>
+  
+  
+    <a id="share-btn-weibo" href="javascript:void(0);" target="_blank">
+      <i class="fa fa-weibo"></i>
+    </a>
+  
+  
+    <a id="share-btn-qq" href="javascript:void(0);" target="_blank">
+      <i class="fa fa-qq"></i>
+    </a>
+  
+  
+    <a id="share-btn-wechat" href="javascript:void(0);" target="_blank">
+      <i class="fa fa-wechat"></i>
+    </a>
+  
+</div>
+  </body>
+</html>
