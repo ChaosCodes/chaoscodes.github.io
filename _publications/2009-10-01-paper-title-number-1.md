@@ -1,8 +1,8 @@
 ---
 title: "One Network, Many Masks: Towards More Parameter-Efficient Transfer Learning"
 collection: publications
-permalink: https://aclanthology.org/2023.acl-long.418.pdf'
-excerpt: 'This paper is about the number 1. The number 2 is left for future work.'
+permalink: https://aclanthology.org/2023.acl-long.418.pdf
+# excerpt: 'This paper is about the number 1. The number 2 is left for future work.'
 date: 2023-07-01
 venue: 'ACL 2023'
 # paperurl: 'https://aclanthology.org/2023.acl-long.418.pdf'
