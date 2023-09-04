@@ -31,9 +31,9 @@ Research  Experience
 Publications
 ======
 
-**G. Zeng\***, P. Zhang\*, W. Lu. One Network, Many Masks: Towards More Parameter-Efficient Transfer Learning. Accepted by **ACL 2023.**
-**G. Zeng**, W. Lu. Unsupervised Non-transferable Text Classification. Accepted by **EMNLP 2022.**
-**G. Zeng**, W. Yang, Z. Ju, Y. Yang, S. Wang, R. Zhang, M. Zhou, J. Zeng, X. Dong, R. Zhang, H. Fang, P. Zhu, S. Chen, P. Xie. MedDialog: A Large-scale Medical Dialogue Dataset. Accepted by **EMNLP 2020**.
+* **Guangtao. Zeng\***, P. Zhang\*, W. Lu. One Network, Many Masks: Towards More Parameter-Efficient Transfer Learning. Accepted by **ACL 2023.**
+* **Guangtao. Zeng**, W. Lu. Unsupervised Non-transferable Text Classification. Accepted by **EMNLP 2022.
+* **Guangtao. Zeng**, W. Yang, Z. Ju, Y. Yang, S. Wang, R. Zhang, M. Zhou, J. Zeng, X. Dong, R. Zhang, H. Fang, P. Zhu, S. Chen, P. Xie. MedDialog: A Large-scale Medical Dialogue Dataset. Accepted by **EMNLP 2020**.
 
 
 Honors and Awards
