@@ -11,5 +11,3 @@ citation: '<i>G. Zeng</i>, W. Yang, Z. Ju, Y. Yang, S. Wang, R. Zhang, M. Zhou, 
 <!-- This paper is about the number 3. The number 4 is left for future work. -->
 
 [Download paper here](https://aclanthology.org/2020.emnlp-main.743.pdf)
-
-Recommended citation: <i>G. Zeng</i>, W. Yang, Z. Ju, Y. Yang, S. Wang, R. Zhang, M. Zhou, J. Zeng, X. Dong, R. Zhang, H. Fang, P. Zhu, S. Chen, P. Xie. (2020). "MedDialog: Large-scale Medical Dialogue Datasets." <i>EMNLP 2020</i>. 1(3).
